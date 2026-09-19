@@ -340,11 +340,14 @@ function showJoin(msg) {
     ${msg ? `<div class="note">${esc(msg)}</div>` : ''}
     <div class="row" style="margin-top:18px"><div class="q">你的名字</div></div>
     <input type="text" id="nameIn" placeholder="留空 = 匿名" maxlength="60" style="max-width:280px">
+    <p style="font-size:12.5px;color:var(--ink3);margin-top:6px">
+      填了名字，换设备时打同样的名字就能接着上次继续。</p>
     <p style="margin-top:14px"><button class="primary" id="joinGo">开始</button></p>
     <details style="margin-top:14px">
       <summary style="cursor:pointer;font-size:12.5px;color:var(--ink3)">已经答过一半？</summary>
       <p style="margin-top:8px">同一浏览器直接打开原链接就会接着上次的地方继续。
-        换了设备或清过浏览器数据，可使用左上角参与者编号找回记录。</p>
+        换了设备或清过浏览器数据：填了名字的，打同样的名字即可；
+        匿名的，用左上角参与者编号找回记录。</p>
     </details>`;
   $('main').replaceChildren(p);
 
@@ -356,16 +359,11 @@ function showJoin(msg) {
     try {
       const r = await apiPost({ action: 'join', survey: S.survey,
                                 name, item_ids: S.items.map(i => i.id) });
-      S.code = r.code;
-      S.order = r.item_ids;
-      S.answers = {};
       rememberPid(S.survey, r.code);
+      // 带 ?p= 重载：新建和「按名字接续」走同一条恢复路径，答案回填不用写第二套
       const u = new URL(location.href);
       u.searchParams.set('p', r.code);
-      history.replaceState(null, '', u);       // 刷新/收藏都还能回到自己的进度
-      showPid();
-      S.idx = 0;
-      renderItem();
+      location.href = u.toString();
     } catch (e) {
       $('joinGo').disabled = false;
       showJoin('登记失败：' + e.message + '。请检查网络后重试。');
