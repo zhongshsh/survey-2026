@@ -408,12 +408,13 @@ function renderItem() {
   if (!it) { showFatal(`题目 ${id} 不在 items.json 里`); return; }
   shownAt = Date.now();
 
-  const partName = it.part === 'A' ? 'same-idea judgement' : '评审一个 idea';
   const parts = it.part === 'A' ? renderA(it) : renderB(it);
   const card = el('div', 'item');
+  // 顺序是按人随机的，所以显示第几题(01/02…)而不是题号 A-02 —— 后者和底部
+  // 「3 / 12」对不上，只会让人以为跳题了。真实 item_id 记在提交数据里。
+  const seq = String(S.idx + 1).padStart(2, '0');
   card.innerHTML =
-    `<div class="ihead"><span class="inum">${esc(it.id)}</span>
-       <span class="pill">Part ${esc(it.part)} · ${partName}</span></div>
+    `<div class="ihead"><span class="inum" title="${esc(it.id)}">${seq}</span></div>
      <div class="ibody" id="itemBody">
        <div class="stage">
          <div class="read">${parts.left}</div>
