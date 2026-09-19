@@ -104,6 +104,24 @@ const el = (tag, cls, html) => {
 };
 const esc = (s) => String(s).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
 
+/* 标签页图标。两份问卷各一个，开着两个标签时一眼能分清是哪份。
+   内联 SVG data URI —— 不额外请求文件，也不怕 Pages 的路径问题。 */
+const FAVICON = {
+  judge: 'data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2032%2032%22%3E%3Crect%20width%3D%2232%22%20height%3D%2232%22%20rx%3D%227%22%20fill%3D%22%233a4fa0%22%2F%3E%3Crect%20x%3D%226%22%20y%3D%228%22%20width%3D%228%22%20height%3D%2216%22%20rx%3D%222%22%20fill%3D%22%23ffffff%22%2F%3E%3Crect%20x%3D%2218%22%20y%3D%228%22%20width%3D%228%22%20height%3D%2216%22%20rx%3D%222%22%20fill%3D%22%23ffffff%22%20opacity%3D%22.55%22%2F%3E%3C%2Fsvg%3E',
+  quality: 'data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2032%2032%22%3E%3Crect%20width%3D%2232%22%20height%3D%2232%22%20rx%3D%227%22%20fill%3D%22%238a4a86%22%2F%3E%3Crect%20x%3D%226%22%20y%3D%2218%22%20width%3D%225%22%20height%3D%228%22%20rx%3D%221.5%22%20fill%3D%22%23ffffff%22%20opacity%3D%22.55%22%2F%3E%3Crect%20x%3D%2213.5%22%20y%3D%2213%22%20width%3D%225%22%20height%3D%2213%22%20rx%3D%221.5%22%20fill%3D%22%23ffffff%22%20opacity%3D%22.78%22%2F%3E%3Crect%20x%3D%2221%22%20y%3D%227%22%20width%3D%225%22%20height%3D%2219%22%20rx%3D%221.5%22%20fill%3D%22%23ffffff%22%2F%3E%3C%2Fsvg%3E',
+};
+function setFavicon(survey) {
+  const href = FAVICON[survey] || FAVICON.judge;
+  let n = document.getElementById('favicon');
+  if (!n) {
+    n = document.createElement('link');
+    n.id = 'favicon';
+    n.rel = 'icon';
+    document.head.appendChild(n);
+  }
+  n.href = href;
+}
+
 /* ------------------------------------------------------------------ 网络 */
 
 function setSave(state, text) {
@@ -581,6 +599,7 @@ async function boot() {
   const t = T();
   document.querySelector('.bar .title').textContent = cfg.title;
   document.title = cfg.title;
+  setFavicon(S.survey);
   document.documentElement.lang = cfg.lang === 'en' ? 'en' : 'zh-CN';
   $('btnPrev').textContent = t.prev;
   $('btnNext').textContent = t.next;
