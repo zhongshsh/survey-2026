@@ -243,7 +243,12 @@ function scale(name, opts) {
 const n15 = (lo, hi) => [{ v: 1, t: '1', s: lo }, { v: 2, t: '2' }, { v: 3, t: '3' },
                          { v: 4, t: '4' }, { v: 5, t: '5', s: hi }];
 
-/* 逐字段判定不评 contribution_type：它只有五个取值、绝大多数是 method，
+/* judge 的逐字段输出是严格二值(true/false)，没有第三档 —— 解析不出时记为缺判，
+   不是「说不准」。所以问卷这边也只给 Same / Different：给人一个模型没有的选项，
+   那些格子就没有可比对象，只能整格丢掉。
+   (Part B 的「看不出」是盲法操纵检查，与 judge 无关，保留。)
+
+   逐字段判定不评 contribution_type：它只有五个取值、绝大多数是 method，
    判「相同」几乎必然为真，一致性读数会被它稀释成噪声。
    但它仍然要在左边的 schema 里显示 —— 它是读懂另外四个字段的上下文。 */
 const NOT_RATED = ['contribution_type'];
@@ -293,7 +298,6 @@ function renderA(it) {
     <div class="fieldq"><span class="fname">${esc(f)}</span><div class="opts">
       <label class="opt"><input type="radio" name="f_${f}" value="same">Same</label>
       <label class="opt"><input type="radio" name="f_${f}" value="diff">Different</label>
-      <label class="opt"><input type="radio" name="f_${f}" value="unsure">Unsure</label>
     </div></div>`).join('');
 
   // 下面的措辞逐句照搬 ar/evaluation/judging.py 的 build_judge_sys(五字段轴)：
