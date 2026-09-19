@@ -9,7 +9,7 @@
 'use strict';
 
 const CFG = window.SURVEY_CONFIG || {};
-const PREVIEW = !CFG.ENDPOINT || !CFG.TOKEN;
+const PREVIEW = !CFG.ENDPOINT;
 
 const SESSION_ID = (() => {
   try {
@@ -42,7 +42,7 @@ function setSave(state, text) {
 }
 
 async function apiGet(params) {
-  const q = new URLSearchParams({ token: CFG.TOKEN, ...params });
+  const q = new URLSearchParams(params);   // 无共享 token：邀请码就是凭据
   const r = await fetch(`${CFG.ENDPOINT}?${q}`, { redirect: 'follow' });
   if (!r.ok) throw new Error('GET ' + r.status);
   const j = await r.json();
@@ -55,7 +55,7 @@ async function apiPost(body) {
     method: 'POST',
     headers: { 'Content-Type': 'text/plain;charset=utf-8' },   // 不要改成 json
     redirect: 'follow',
-    body: JSON.stringify({ token: CFG.TOKEN, code: S.code, session_id: SESSION_ID, ...body }),
+    body: JSON.stringify({ code: S.code, session_id: SESSION_ID, ...body }),
   });
   if (!r.ok) throw new Error('POST ' + r.status);
   const j = await r.json();
@@ -110,7 +110,7 @@ window.addEventListener('pagehide', () => {
     fetch(CFG.ENDPOINT, {
       method: 'POST', keepalive: true,
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify({ token: CFG.TOKEN, code: S.code, session_id: SESSION_ID,
+      body: JSON.stringify({ code: S.code, session_id: SESSION_ID,
                              action: 'save', items: [...Outbox.pending.values()] }),
     });
   } catch (e) { /* 卸载期发不出去也没辙，本地已存 */ }
