@@ -335,8 +335,8 @@ function showConsent() {
   p.innerHTML = `
     <h2>${esc(cfg.title)} · 参与说明</h2>
     <p>${cfg.blurb}</p>
-    <p>共 ${S.order.length} 题，预计 ${Math.round(S.order.length * 1.8)} 分钟，可分多次完成，
-      答案随时自动保存，关掉页面再用同一链接打开会接着上次的地方继续。</p>
+    <p>共 ${S.order.length} 题，预计 ${Math.round(S.order.length * 1.8)} 分钟，
+      可分多次完成，答案自动保存。</p>
     <p><b>不收集姓名、邮箱或任何个人身份信息。</b>记录的只有你的邀请码、作答内容和每题用时。
       数据仅用于学术研究，你可以随时关闭页面退出，已提交的部分如需删除请联系研究者。</p>
     ${PREVIEW ? '<div class="note"><b>预览模式：</b>后端未配置，答案不会被保存。</div>' : ''}
@@ -361,21 +361,17 @@ function showJoin(msg) {
     <h2>${esc(cfg.title)}</h2>
     <p>${cfg.blurb}</p>
     ${msg ? `<div class="note">${esc(msg)}</div>` : ''}
-    <div class="row" style="margin-top:18px">
-      <div class="q">你的名字 <small>可选。留空即匿名——两种情况都能中断后继续，
-        因为续答靠的是浏览器里保存的参与者编号，不是名字。</small></div>
-    </div>
+    <div class="row" style="margin-top:18px"><div class="q">你的名字</div></div>
     <input type="text" id="nameIn" placeholder="留空 = 匿名" maxlength="60" style="max-width:280px">
     <p style="margin-top:14px"><button class="primary" id="joinGo">开始</button></p>
     <details style="margin-top:14px">
       <summary style="cursor:pointer;font-size:12.5px;color:var(--ink3)">已经答过一半？</summary>
       <p style="margin-top:8px">同一浏览器直接打开原链接就会接着上次的地方继续。
-        换了设备或清过浏览器数据，就把上次的参与者编号填进来：</p>
-      <div class="row"><input type="text" id="codeIn" placeholder="P1A2B3C4D5" style="max-width:240px">
-        <button id="codeGo">继续</button></div>
+        换了设备或清过浏览器数据，就联系发布者要参与者编号。</p>
     </details>`;
   $('main').replaceChildren(p);
 
+  $('nameIn').addEventListener('keydown', e => { if (e.key === 'Enter') $('joinGo').click(); });
   $('joinGo').addEventListener('click', async () => {
     $('joinGo').disabled = true;
     const name = $('nameIn').value.trim();
@@ -398,16 +394,6 @@ function showJoin(msg) {
       showJoin('登记失败：' + e.message + '。请检查网络后重试。');
     }
   });
-
-  const resume = () => {
-    const v = $('codeIn').value.trim().toUpperCase();
-    if (!v) return;
-    const u = new URL(location.href);
-    u.searchParams.set('p', v);
-    location.href = u.toString();
-  };
-  $('codeGo').addEventListener('click', resume);
-  $('codeIn').addEventListener('keydown', e => { if (e.key === 'Enter') resume(); });
 }
 
 /* 参与者编号按问卷分别记在本地：同一台机器可以先后做两份问卷，互不覆盖。 */
