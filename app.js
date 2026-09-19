@@ -251,9 +251,6 @@ function renderA(it) {
         <div class="q">Confidence</div>
         ${scale('confidence', n15('not at all', 'very sure'))}
       </div>
-      <div class="row"><div class="q">One-sentence reason
-        <small>Name the one thing that decided it, rather than restating both sides.</small></div></div>
-      <textarea name="reason" rows="3"></textarea>
     </div>`;
   return { left, right };
 }
