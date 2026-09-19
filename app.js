@@ -21,7 +21,7 @@ const SESSION_ID = (() => {
 
 const S = {
   code: null, items: [], order: [], meta: {},
-  answers: {}, idx: 0, consented: false, finished: false,
+  answers: {}, idx: 0, finished: false,
   survey: 'judge', surveyTitle: '',
 };
 
@@ -328,31 +328,6 @@ function updateProgress() {
   $('progressBar').style.width = `${(done / Math.max(1, S.order.length)) * 100}%`;
 }
 
-function showConsent() {
-  $('nav').hidden = true;
-  const cfg = SURVEYS[S.survey] || SURVEYS.judge;
-  const p = el('div', 'panel');
-  p.innerHTML = `
-    <h2>${esc(cfg.title)} · 参与说明</h2>
-    <p>${cfg.blurb}</p>
-    <p>共 ${S.order.length} 题，预计 ${Math.round(S.order.length * 1.8)} 分钟，
-      可分多次完成，答案自动保存。</p>
-    <p><b>不收集姓名、邮箱或任何个人身份信息。</b>记录的只有你的邀请码、作答内容和每题用时。
-      数据仅用于学术研究，你可以随时关闭页面退出，已提交的部分如需删除请联系研究者。</p>
-    ${PREVIEW ? '<div class="note"><b>预览模式：</b>后端未配置，答案不会被保存。</div>' : ''}
-    <div class="row" style="margin-top:16px">
-      <label class="opt"><input type="checkbox" id="consentBox"> 我已阅读上述说明，自愿参与</label>
-    </div>
-    <button class="primary" id="consentGo" disabled>开始</button>`;
-  $('main').replaceChildren(p);
-  $('consentBox').addEventListener('change', e => { $('consentGo').disabled = !e.target.checked; });
-  $('consentGo').addEventListener('click', async () => {
-    S.consented = true;
-    if (!PREVIEW) { try { await apiPost({ action: 'consent' }); } catch (e) { console.warn(e); } }
-    renderItem();
-  });
-}
-
 function showJoin(msg) {
   $('nav').hidden = true;
   const cfg = SURVEYS[S.survey] || SURVEYS.judge;
@@ -360,6 +335,8 @@ function showJoin(msg) {
   p.innerHTML = `
     <h2>${esc(cfg.title)}</h2>
     <p>${cfg.blurb}</p>
+    <p>不收集个人身份信息，数据仅用于学术研究。点「开始」即表示同意参与，可随时退出。
+      共 ${S.order.length || S.items.length} 题，可分多次完成，答案自动保存。</p>
     ${msg ? `<div class="note">${esc(msg)}</div>` : ''}
     <div class="row" style="margin-top:18px"><div class="q">你的名字</div></div>
     <input type="text" id="nameIn" placeholder="留空 = 匿名" maxlength="60" style="max-width:280px">
@@ -367,7 +344,7 @@ function showJoin(msg) {
     <details style="margin-top:14px">
       <summary style="cursor:pointer;font-size:12.5px;color:var(--ink3)">已经答过一半？</summary>
       <p style="margin-top:8px">同一浏览器直接打开原链接就会接着上次的地方继续。
-        换了设备或清过浏览器数据，就联系发布者要参与者编号。</p>
+        换了设备或清过浏览器数据，可使用左上角参与者编号找回记录。</p>
     </details>`;
   $('main').replaceChildren(p);
 
@@ -375,7 +352,7 @@ function showJoin(msg) {
   $('joinGo').addEventListener('click', async () => {
     $('joinGo').disabled = true;
     const name = $('nameIn').value.trim();
-    if (PREVIEW) { S.code = 'PREVIEW'; showConsent(); return; }
+    if (PREVIEW) { S.code = 'PREVIEW'; showPid(); S.idx = 0; renderItem(); return; }
     try {
       const r = await apiPost({ action: 'join', survey: S.survey,
                                 name, item_ids: S.items.map(i => i.id) });
@@ -386,14 +363,22 @@ function showJoin(msg) {
       const u = new URL(location.href);
       u.searchParams.set('p', r.code);
       history.replaceState(null, '', u);       // 刷新/收藏都还能回到自己的进度
-      $('codePill').textContent = S.code;
-      $('codePill').hidden = false;
-      showConsent();
+      showPid();
+      S.idx = 0;
+      renderItem();
     } catch (e) {
       $('joinGo').disabled = false;
       showJoin('登记失败：' + e.message + '。请检查网络后重试。');
     }
   });
+}
+
+/* 左上角显示参与者编号 —— 换设备找回记录全靠它，所以要一直看得见。 */
+function showPid() {
+  const n = $('codePill');
+  n.textContent = S.code;
+  n.title = '参与者编号：换设备或清过浏览器数据时，用它找回记录';
+  n.hidden = false;
 }
 
 /* 参与者编号按问卷分别记在本地：同一台机器可以先后做两份问卷，互不覆盖。 */
@@ -450,19 +435,16 @@ async function boot() {
     S.survey = st.survey || 'judge';
     S.surveyTitle = st.survey_title || '';
     S.answers = st.answers || {};
-    S.consented = !!st.consent_ts;
     S.finished = !!st.finished_ts;
     Outbox.restore();
   }
 
-  $('codePill').textContent = S.code;
-  $('codePill').hidden = false;
+  showPid();
   const cfg = SURVEYS[S.survey] || SURVEYS.judge;
   document.querySelector('.bar .title').textContent = cfg.title;
   document.title = cfg.title + ' · 问卷';
 
   if (S.finished) { showThanks(); return; }
-  if (!S.consented) { showConsent(); return; }
   // 续答落到第一道没答的题
   const first = S.order.findIndex(id => !answered(id));
   S.idx = first < 0 ? 0 : first;
