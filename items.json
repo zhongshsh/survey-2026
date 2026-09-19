@@ -1,0 +1,74 @@
+{
+ "meta": {
+  "theme": "auto_research",
+  "build": "demo-walkthrough",
+  "shown_fields": [
+   "contribution_type",
+   "problem",
+   "motivation",
+   "proposed_approach",
+   "research_plan"
+  ],
+  "n_items": 4
+ },
+ "items": [
+  {
+   "id": "A-01",
+   "part": "A",
+   "A": {
+    "contribution_type": "method",
+    "problem": "Existing approaches recover governing ordinary differential equations as a static inference problem over fixed datasets, assuming observed trajectories are sufficiently informative; when data are limited, multiple equations can be observationally indistinguishable, creating identifiability gaps and incorrect recovered equations.",
+    "motivation": "Adaptive data acquisition can resolve observational indistinguishability, and large language models make tractable priors over large equation spaces, enabling correct recovery from limited and noisy data.",
+    "proposed_approach": "The proposed closed-loop framework jointly optimizes symbolic hypothesis construction and adaptive data acquisition. A large language model proposes operator priors that partition the large search space into distinct regions, and candidate equations within each region are fit to observed data. Disagreement among the candidates guides acquisition of informative trajectories, forming a feedback loop that iteratively refines both the hypothesis space and the discovered dynamics.",
+    "research_plan": "Evidence for claim (1) comes from evaluation on 122 ODE systems spanning ODEBench and ODEBase, using median NMSE and symbolic accuracy against state-of-the-art baselines. Claim (2) is assessed through sample-efficiency analysis comparing performance under reduced data fractions. Claim (3) is tested by noise-robustness analysis and comparison of recovered symbolic structures, checking for spurious terms relative to baselines."
+   },
+   "B": {
+    "contribution_type": "method",
+    "problem": "LLM-based equation-discovery systems treat the dataset as fixed, proposing hypotheses from language-model priors and fitting them to pre-collected measurements, but they never decide which new experiments to run. Classical active symbolic regression selects new data but operates over genetic-programming populations and uses variance-based utilities that cannot distinguish two scientifically distinct mechanisms whose predictions differ only in a narrow region of input space.",
+    "motivation": "Closing the experiment-selection loop would make equation discovery more data-efficient and more sensitive to experimental feedback, and LLM hypothesis generation makes such a loop tractable.",
+    "proposed_approach": "The proposed framework is a closed-loop agentic discovery system. It prompts an LLM to propose a diverse set of executable mechanistic hypotheses, fits each hypothesis to the data gathered so far, and selects the next experiment by a Bayesian model-discrimination utility: the expected information gain over the competing mechanisms. It then observes the outcome, updates posterior belief, prunes disconfirmed mechanisms, and refreshes the hypothesis set.",
+    "research_plan": "The claims are evaluated on memorization-resistant synthetic equation-discovery problems with controllable input spaces, under strict trace-log and leakage reporting, with comparisons to fixed-data LLM agents and variance-based active symbolic regression. Support is determined by whether the approach recovers governing equations with fewer and more informative measurements than the baselines and restores sensitivity to experimental feedback; no explicit quantitative failure threshold is stated."
+   }
+  },
+  {
+   "id": "A-02",
+   "part": "A",
+   "A": {
+    "contribution_type": "method",
+    "problem": "Current LLM-driven scientific agents can propose hypotheses, fit models, and falsify a single hypothesis, but no retrieved system chooses the next experiment based on which of several still-alive hypotheses is correct: the closest benchmark finds GPT-4o-class agents poor at informative experiment design, falsification frameworks attack one hypothesis at a time, ranking methods never choose new measurement coordinates in design space, and data-driven discovery systems never choose where to measure.",
+    "motivation": "Making experiment choice depend on hypothesis discrimination can reduce the number of measurements needed to recover hidden mechanisms, especially on memorization-resistant problems where a language model's prior is weak.",
+    "proposed_approach": "The proposed discovery loop maintains a falsification-managed set of alive candidate mechanisms, described as closed-form laws with fitted parameters and predictive uncertainty. Each round, a language model is given a compact card of the current candidate set and its disagreement regions and returns candidate design regions; an explicit model-space acquisition function equal to the expected reduction of posterior entropy over the alive candidate set scores these regions. Measurements are then executed, and falsified candidates are pruned under multiplicity-controlled sequential testing.",
+    "research_plan": "(1) The fewer-measurement claim is tested on roughly 20 controlled-prior tasks built on verifiable stochastic oracles, with sample complexity to recovery measured against five baselines. (2) The prior-strength claim is tested by comparing performance on transformed and synthetic, memorization-resistant problems where the LLM prior is weakest against problems with stronger priors. (3) Realized information gain and disagreement-hit rate are also measured, and ablations isolate pruning, structural closure, and the explicit acquisition function. The abstract gives no explicit failure condition or matched-resource statement."
+   },
+   "B": {
+    "contribution_type": "method (secondary: artifact)",
+    "problem": "Most approaches to scientific discovery reduce it to supervised learning over fixed datasets, where limited observations can support multiple plausible mechanisms that fit locally but fail to generalize; the unresolved challenge is selecting informative observations to resolve uncertainty through adaptive data acquisition.",
+    "motivation": "Closing the loop between hypotheses and experiments would enable robust mechanism recovery under constrained observation budgets, avoiding reliance on passively collected data that cannot distinguish locally plausible mechanisms.",
+    "proposed_approach": "The proposed framework iteratively proposes plausible hypotheses, selects informative experiments to distinguish or refine them, and updates its state using the resulting evidence; rather than fitting models to passively collected data, it couples hypothesis generation with hypothesis-conditioned experiment selection and mechanism refinement. The work also releases a benchmark suite with two datasets: 57 enzyme-kinetics tasks and 45 gene-regulatory-network tasks, modeling discovery as a budget-constrained process requiring adaptive experiment design, variable selection, and recovery of true mechanisms. Code and data are made available.",
+    "research_plan": "Evaluation for the framework-performance claim compares the proposed framework against prior methods on NewtonBench, the 57-task chemistry dataset, and the 45-task gene-regulatory-network dataset; reported metrics are symbolic accuracy and exact graph recovery. Evaluation for the sample-efficiency claim compares hypothesis-guided experimentation against the strongest competing baselines under a budget constraint. Evaluation for the benchmark-adequacy claim rests on the design of the tasks as requiring adaptive experiment design, variable selection, and recovery of true mechanisms in two domains. Success conditions are implicitly superiority on the reported metrics and improved sample efficiency; no explicit failure thresholds or matched-compute controls are stated."
+   }
+  },
+  {
+   "id": "B-01",
+   "part": "B",
+   "schema": {
+    "contribution_type": "method (secondary: artifact)",
+    "problem": "Most approaches to scientific discovery reduce it to supervised learning over fixed datasets, where limited observations can support multiple plausible mechanisms that fit locally but fail to generalize; the unresolved challenge is selecting informative observations to resolve uncertainty through adaptive data acquisition.",
+    "motivation": "Closing the loop between hypotheses and experiments would enable robust mechanism recovery under constrained observation budgets, avoiding reliance on passively collected data that cannot distinguish locally plausible mechanisms.",
+    "proposed_approach": "The proposed framework iteratively proposes plausible hypotheses, selects informative experiments to distinguish or refine them, and updates its state using the resulting evidence; rather than fitting models to passively collected data, it couples hypothesis generation with hypothesis-conditioned experiment selection and mechanism refinement. The work also releases a benchmark suite with two datasets: 57 enzyme-kinetics tasks and 45 gene-regulatory-network tasks, modeling discovery as a budget-constrained process requiring adaptive experiment design, variable selection, and recovery of true mechanisms. Code and data are made available.",
+    "research_plan": "Evaluation for the framework-performance claim compares the proposed framework against prior methods on NewtonBench, the 57-task chemistry dataset, and the 45-task gene-regulatory-network dataset; reported metrics are symbolic accuracy and exact graph recovery. Evaluation for the sample-efficiency claim compares hypothesis-guided experimentation against the strongest competing baselines under a budget constraint. Evaluation for the benchmark-adequacy claim rests on the design of the tasks as requiring adaptive experiment design, variable selection, and recovery of true mechanisms in two domains. Success conditions are implicitly superiority on the reported metrics and improved sample efficiency; no explicit failure thresholds or matched-compute controls are stated."
+   }
+  },
+  {
+   "id": "B-02",
+   "part": "B",
+   "schema": {
+    "contribution_type": "method",
+    "problem": "LLM-based equation-discovery systems treat the dataset as fixed, proposing hypotheses from language-model priors and fitting them to pre-collected measurements, but they never decide which new experiments to run. Classical active symbolic regression selects new data but operates over genetic-programming populations and uses variance-based utilities that cannot distinguish two scientifically distinct mechanisms whose predictions differ only in a narrow region of input space.",
+    "motivation": "Closing the experiment-selection loop would make equation discovery more data-efficient and more sensitive to experimental feedback, and LLM hypothesis generation makes such a loop tractable.",
+    "proposed_approach": "The proposed framework is a closed-loop agentic discovery system. It prompts an LLM to propose a diverse set of executable mechanistic hypotheses, fits each hypothesis to the data gathered so far, and selects the next experiment by a Bayesian model-discrimination utility: the expected information gain over the competing mechanisms. It then observes the outcome, updates posterior belief, prunes disconfirmed mechanisms, and refreshes the hypothesis set.",
+    "research_plan": "The claims are evaluated on memorization-resistant synthetic equation-discovery problems with controllable input spaces, under strict trace-log and leakage reporting, with comparisons to fixed-data LLM agents and variance-based active symbolic regression. Support is determined by whether the approach recovers governing equations with fewer and more informative measurements than the baselines and restores sensitivity to experimental feedback; no explicit quantitative failure threshold is stated."
+   }
+  }
+ ]
+}

@@ -216,3 +216,7 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# 问卷 ground truth：机器判定、真实/agent 来源标签、注意力检查答案。
+# 这个仓库是公开的 GitHub Pages 源，truth.json 绝不能提交。
+truth.json
