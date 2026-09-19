@@ -23,6 +23,8 @@ const S = {
   code: null, items: [], order: [], meta: {},
   answers: {}, idx: 0, finished: false,
   survey: 'judge', surveyTitle: '',
+  // 交完之后点「重新填一份」时置真：下一次 join 不按名字接续，一定新建
+  fresh: false,
 };
 
 /* 两份问卷共用这一个页面，靠邀请码分流：邀请码决定分到哪些题、看到哪段说明。
@@ -357,8 +359,8 @@ function showJoin(msg) {
     const name = $('nameIn').value.trim();
     if (PREVIEW) { S.code = 'PREVIEW'; showPid(); S.idx = 0; renderItem(); return; }
     try {
-      const r = await apiPost({ action: 'join', survey: S.survey,
-                                name, item_ids: S.items.map(i => i.id) });
+      const r = await apiPost({ action: 'join', survey: S.survey, name,
+                                fresh: S.fresh, item_ids: S.items.map(i => i.id) });
       rememberPid(S.survey, r.code);
       // 带 ?p= 重载：新建和「按名字接续」走同一条恢复路径，答案回填不用写第二套
       const u = new URL(location.href);
@@ -395,8 +397,27 @@ function showFatal(msg) {
 
 function showThanks() {
   $('nav').hidden = true;
-  $('main').replaceChildren(el('div', 'panel',
-    `<h2>已提交，谢谢</h2><p>答案已全部保存。可以关闭页面了。</p>`));
+  const p = el('div', 'panel');
+  p.innerHTML = `<h2>已提交，谢谢</h2>
+    <p>答案已全部保存。可以关闭页面了。</p>
+    <p style="margin-top:16px"><button id="againGo">重新填一份</button></p>
+    <p style="font-size:12.5px;color:var(--ink3)">
+      会作为一份新的记录，不覆盖刚才提交的内容。</p>`;
+  $('main').replaceChildren(p);
+  $('againGo').addEventListener('click', () => {
+    // 换一份全新记录：清掉本地 pid 和 URL 上的 ?p=，并让下一次 join 跳过按名字接续
+    try { localStorage.removeItem('pid:' + S.survey); } catch (e) { /* 存不下也无妨 */ }
+    const u = new URL(location.href);
+    u.searchParams.delete('p');
+    u.searchParams.delete('code');
+    history.replaceState(null, '', u);
+    S.fresh = true;
+    S.code = null;
+    S.answers = {};
+    S.idx = 0;
+    $('codePill').hidden = true;
+    showJoin();
+  });
 }
 
 /* ------------------------------------------------------------------ 启动 */
