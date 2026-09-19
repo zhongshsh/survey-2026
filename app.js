@@ -22,6 +22,24 @@ const SESSION_ID = (() => {
 const S = {
   code: null, items: [], order: [], meta: {},
   answers: {}, idx: 0, consented: false, finished: false,
+  survey: 'judge', surveyTitle: '',
+};
+
+/* 两份问卷共用这一个页面，靠邀请码分流：邀请码决定分到哪些题、看到哪段说明。
+   受试者要求不一样，所以各发各的链接，互不相见。 */
+const SURVEYS = {
+  judge: {
+    title: 'LLM judge 一致性',
+    blurb: '每题给你两个匿名化的研究 idea 描述，请判断它们是不是同一个 idea。' +
+           '我们要看的是人的判断与一套自动判定方法是否一致，所以<b>没有标准答案</b>，' +
+           '按你自己的标准判即可。',
+  },
+  quality: {
+    title: 'Idea 质量评审',
+    blurb: '每题给你一个研究 idea 的结构化描述，请像审稿一样给它打分，' +
+           '并判断它做不做得出来、实验大概率会不会 work。' +
+           '部分 idea 来自真实论文，部分由模型生成，<b>题面已统一格式</b>，请只依据内容评判。',
+  },
 };
 
 const $ = (id) => document.getElementById(id);
@@ -312,12 +330,13 @@ function updateProgress() {
 
 function showConsent() {
   $('nav').hidden = true;
+  const cfg = SURVEYS[S.survey] || SURVEYS.judge;
   const p = el('div', 'panel');
   p.innerHTML = `
-    <h2>参与说明</h2>
-    <p>本研究收集研究者对科研 idea 的评审判断，用于检验一套自动评审方法是否与人类判断一致。
-      问卷约 ${S.order.length} 题，预计 ${Math.round(S.order.length * 1.8)} 分钟，可分多次完成，
-      答案随时自动保存。</p>
+    <h2>${esc(cfg.title)} · 参与说明</h2>
+    <p>${cfg.blurb}</p>
+    <p>共 ${S.order.length} 题，预计 ${Math.round(S.order.length * 1.8)} 分钟，可分多次完成，
+      答案随时自动保存，关掉页面再用同一链接打开会接着上次的地方继续。</p>
     <p><b>不收集姓名、邮箱或任何个人身份信息。</b>记录的只有你的邀请码、作答内容和每题用时。
       数据仅用于学术研究，你可以随时关闭页面退出，已提交的部分如需删除请联系研究者。</p>
     ${PREVIEW ? '<div class="note"><b>预览模式：</b>后端未配置，答案不会被保存。</div>' : ''}
@@ -379,14 +398,21 @@ async function boot() {
   S.code = (new URL(location.href).searchParams.get('code') || '').trim().toUpperCase();
 
   if (PREVIEW) {
+    // 预览模式用 ?survey=quality 切换要看的那一份
+    S.survey = (new URL(location.href).searchParams.get('survey') || 'judge');
+    if (!SURVEYS[S.survey]) S.survey = 'judge';
+    const prefix = S.survey === 'quality' ? 'B-' : 'A-';
     S.code = S.code || 'PREVIEW';
-    S.order = S.items.map(i => i.id);
+    S.order = S.items.filter(i => i.id.startsWith(prefix)).map(i => i.id);
+    if (!S.order.length) S.order = S.items.map(i => i.id);
   } else {
     if (!S.code) { showCodePrompt(); return; }
     let st;
     try { st = await apiGet({ action: 'state', code: S.code }); }
     catch (e) { showCodePrompt('邀请码无效，或服务器暂时无法连接：' + e.message); return; }
     S.order = (st.item_ids && st.item_ids.length) ? st.item_ids : S.items.map(i => i.id);
+    S.survey = st.survey || 'judge';
+    S.surveyTitle = st.survey_title || '';
     S.answers = st.answers || {};
     S.consented = !!st.consent_ts;
     S.finished = !!st.finished_ts;
@@ -395,6 +421,9 @@ async function boot() {
 
   $('codePill').textContent = S.code;
   $('codePill').hidden = false;
+  const cfg = SURVEYS[S.survey] || SURVEYS.judge;
+  document.querySelector('.bar .title').textContent = cfg.title;
+  document.title = cfg.title + ' · 问卷';
 
   if (S.finished) { showThanks(); return; }
   if (!S.consented) { showConsent(); return; }
