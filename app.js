@@ -158,32 +158,34 @@ const n15 = (lo, hi) => [{ v: 1, t: '1', s: lo }, { v: 2, t: '2' }, { v: 3, t: '
 
 function renderA(it) {
   const fields = S.meta.shown_fields || [];
-  const rows = fields.map(f => `<tr><td>${esc(f)}</td>
-      <td><label class="opt"><input type="radio" name="f_${f}" value="same"></label></td>
-      <td><label class="opt"><input type="radio" name="f_${f}" value="diff"></label></td>
-      <td><label class="opt"><input type="radio" name="f_${f}" value="unsure"></label></td></tr>`).join('');
-  return `
+  const left = `
     <div class="cmp">
       <div class="col a"><div class="colhead">SCHEMA A</div>${fieldsHtml(it.A)}</div>
       <div class="col b"><div class="colhead">SCHEMA B</div>${fieldsHtml(it.B)}</div>
-    </div>
+    </div>`;
+
+  // 右栏只有 400px，四列表格会挤成一团；改成一字段一块的竖排控件
+  const blocks = fields.map(f => `
+    <div class="fieldq"><span class="fname">${esc(f)}</span><div class="opts">
+      <label class="opt"><input type="radio" name="f_${f}" value="same">相同</label>
+      <label class="opt"><input type="radio" name="f_${f}" value="diff">不同</label>
+      <label class="opt"><input type="radio" name="f_${f}" value="unsure">说不准</label>
+    </div></div>`).join('');
+
+  const right = `
     <div class="ans">
       <h4>第一步 · 逐字段判定</h4>
       <p class="hint">只看这一个字段，当其余字段被遮住。措辞、命名、详略不同不算不同；
         只是同一个话题 / 任务 / 数据集 / 技术家族<b>不算</b>相同。
         任一侧该字段没有内容一律判「不同」。</p>
-      <div class="tscroll"><table class="grid">
-        <thead><tr><th>字段</th><th>相同</th><th>不同</th><th>说不准</th></tr></thead>
-        <tbody>${rows}</tbody>
-      </table></div>
+      ${blocks}
     </div>
     <div class="ans">
       <h4>第二步 · 整体判定</h4>
       <div class="row">
         <div class="q">A 与 B 是否是同一个 core idea？
           <small>门槛：处理的 problem 实质相同 <b>且</b> 提出的 approach 实质相同。
-            这不是上面五格的投票或平均——只在 problem / motivation / contribution_type
-            上一致<b>不够</b>。</small></div>
+            这不是上面五格的投票或平均。</small></div>
         ${scale('same_idea', [{ v: 'yes', t: '是' }, { v: 'no', t: '否' }])}
       </div>
       <div class="row">
@@ -191,13 +193,14 @@ function renderA(it) {
         ${scale('confidence', n15('很不确定', '很确定'))}
       </div>
       <div class="row"><div class="q">一句话理由<small>写清决定性的那一点，不要复述两边</small></div></div>
-      <textarea name="reason" rows="2"></textarea>
+      <textarea name="reason" rows="3"></textarea>
     </div>`;
+  return { left, right };
 }
 
 function renderB(it) {
-  return `
-    ${fieldsHtml(it.schema)}
+  const left = fieldsHtml(it.schema);
+  const right = `
     <div class="ans">
       <h4>第一组 · 评审维度（1–5）</h4>
       <div class="row"><div class="q"><b>Originality</b>
@@ -248,6 +251,7 @@ function renderB(it) {
         ${scale('expertise', [{ v: 1, t: '不熟' }, { v: 2, t: '读过' },
                               { v: 3, t: '做过' }, { v: 4, t: '发过' }])}</div>
     </div>`;
+  return { left, right };
 }
 
 /* -------------------------------------------------------------- 答案读写 */
@@ -286,14 +290,20 @@ function renderItem() {
   shownAt = Date.now();
 
   const partName = it.part === 'A' ? '判断两个 idea 是否相同' : '评审一个 idea';
+  const parts = it.part === 'A' ? renderA(it) : renderB(it);
   const card = el('div', 'item');
   card.innerHTML =
     `<div class="ihead"><span class="inum">${esc(it.id)}</span>
        <span class="pill">Part ${esc(it.part)} · ${partName}</span></div>
-     <div class="ibody" id="itemBody"></div>`;
-  card.querySelector('#itemBody').innerHTML = it.part === 'A' ? renderA(it) : renderB(it);
+     <div class="ibody" id="itemBody">
+       <div class="stage">
+         <div class="read">${parts.left}</div>
+         <div class="rate">${parts.right}</div>
+       </div>
+     </div>`;
 
   const main = $('main');
+  main.classList.add('wide');        // 答题屏用宽版容器
   main.replaceChildren(card);
   window.scrollTo(0, 0);
 
@@ -332,6 +342,7 @@ function updateProgress() {
 
 function showJoin(msg) {
   $('nav').hidden = true;
+  $('main').classList.remove('wide');
   const cfg = SURVEYS[S.survey] || SURVEYS.judge;
   const p = el('div', 'panel');
   p.innerHTML = `
@@ -391,12 +402,14 @@ function recallPid(survey) {
 
 function showFatal(msg) {
   $('nav').hidden = true;
+  $('main').classList.remove('wide');
   $('main').replaceChildren(el('div', 'panel',
     `<h2>出错了</h2><p>${esc(msg)}</p><p>刷新页面重试；若反复出现请联系研究者。</p>`));
 }
 
 function showThanks() {
   $('nav').hidden = true;
+  $('main').classList.remove('wide');
   const p = el('div', 'panel');
   p.innerHTML = `<h2>已提交，谢谢</h2>
     <p>答案已全部保存。可以关闭页面了。</p>
