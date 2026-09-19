@@ -281,6 +281,45 @@ function writeItem(node, ans) {
 
 /* ------------------------------------------------------------------ 界面 */
 
+/**
+ * 右侧评分栏的高度跟着左边题面走。
+ *
+ * 规则：评分栏自然高度 < 题面高度 → 钉住跟随，上限取「题面高度」与「视口可用高度」
+ * 的较小者，读长 schema 时评分项始终在视野里。反之（评分项比题面还长，Part B 常见）
+ * 就让它正常铺开 —— 钉住只会把一个本来一眼看完的表单塞进小滚动框。
+ */
+let rateSyncing = false;
+
+function syncRate(card) {
+  // 重入锁：ResizeObserver 盯着 .rate，而这个函数会改 .rate 的高度 —— 不挡住
+  // 自己触发的那一轮回调就是个自激循环。锁到下一帧再放开，本轮改动引发的
+  // 回调会在这之前送达，正好被吃掉。
+  if (rateSyncing) return;
+  const read = card.querySelector('.read');
+  const rate = card.querySelector('.rate');
+  if (!read || !rate) return;
+
+  rateSyncing = true;
+  try {
+    if (window.matchMedia('(max-width:1040px)').matches) {   // 窄屏上下堆叠，不跟随
+      rate.classList.remove('follow');
+      rate.style.removeProperty('--rate-max');
+      return;
+    }
+    rate.classList.remove('follow');          // 先还原，否则量到的是被裁过的高度
+    rate.style.removeProperty('--rate-max');
+    const readH = read.offsetHeight;
+    const rateH = rate.offsetHeight;
+    if (rateH < readH - 24) {                 // 24px 余量，免得两边差不多高时来回抖
+      rate.style.setProperty('--rate-max',
+        Math.min(readH, window.innerHeight - 150) + 'px');
+      rate.classList.add('follow');
+    }
+  } finally {
+    requestAnimationFrame(() => { rateSyncing = false; });
+  }
+}
+
 let shownAt = Date.now();
 
 function renderItem() {
@@ -320,6 +359,18 @@ function renderItem() {
   };
   body.addEventListener('change', capture);
   body.addEventListener('input', e => { if (e.target.tagName === 'TEXTAREA') capture(); });
+
+  // 题面高度会随字体加载、textarea 拉伸、窗口缩放变化，每次都要重量
+  syncRate(card);
+  if (window.ResizeObserver) {
+    if (S._ro) S._ro.disconnect();
+    S._ro = new ResizeObserver(() => syncRate(card));
+    S._ro.observe(card.querySelector('.read'));
+    S._ro.observe(card.querySelector('.rate'));
+  }
+  if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(() => syncRate(card)).catch(() => {});
+  }
 
   $('counter').textContent = `${S.idx + 1} / ${S.order.length}`;
   $('btnPrev').disabled = S.idx === 0;
@@ -496,6 +547,11 @@ $('btnFinish').addEventListener('click', async () => {
   try { await apiPost({ action: 'finish', detail: { n_items: S.order.length } }); }
   catch (e) { alert('提交失败：' + e.message); return; }
   showThanks();
+});
+
+window.addEventListener('resize', () => {
+  const card = document.querySelector('.item');
+  if (card) syncRate(card);
 });
 
 boot();

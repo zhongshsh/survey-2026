@@ -80,14 +80,20 @@
   /* ---- 左题面 / 右评分 ---- */
   .stage{display:grid; grid-template-columns:minmax(0,1fr) 400px; gap:0 26px; align-items:start}
   .stage > .rate{
-    position:sticky; top:calc(env(safe-area-inset-top,0px) + 62px);
-    align-self:start; max-height:calc(100dvh - 150px); overflow-y:auto; overscroll-behavior:contain;
+    align-self:start;
     background:var(--sunk); border:1px solid var(--rule); border-radius:5px; padding:14px 15px;
+  }
+  /* 只有评分栏比题面矮时才跟随滚动：它比题面高的时候，钉住毫无意义，
+     反而会把一个本来能一眼看完的表单塞进一个小滚动框里。高度由 JS 量完再定。 */
+  .stage > .rate.follow{
+    position:sticky; top:calc(env(safe-area-inset-top,0px) + 62px);
+    max-height:var(--rate-max, calc(100dvh - 150px));
+    overflow-y:auto; overscroll-behavior:contain;
   }
   .stage > .read{min-width:0}
   @media (max-width:1040px){
     .stage{grid-template-columns:1fr; gap:22px 0}
-    .stage > .rate{position:static; max-height:none; overflow:visible}
+    .stage > .rate, .stage > .rate.follow{position:static; max-height:none; overflow:visible}
   }
 
   .cmp{display:grid; grid-template-columns:1fr 1fr; gap:0 18px}
