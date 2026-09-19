@@ -353,22 +353,69 @@ function showConsent() {
   });
 }
 
-function showCodePrompt(msg) {
+function showJoin(msg) {
   $('nav').hidden = true;
+  const cfg = SURVEYS[S.survey] || SURVEYS.judge;
   const p = el('div', 'panel');
   p.innerHTML = `
-    <h2>请输入邀请码</h2>
-    <p>邀请码在邀请邮件里，形如 <code>R3K9F2</code>。</p>
+    <h2>${esc(cfg.title)}</h2>
+    <p>${cfg.blurb}</p>
     ${msg ? `<div class="note">${esc(msg)}</div>` : ''}
-    <div class="row"><input type="text" id="codeIn" placeholder="R3K9F2" style="max-width:220px"></div>
-    <button class="primary" id="codeGo">进入</button>`;
+    <div class="row" style="margin-top:18px">
+      <div class="q">你的名字 <small>可选。留空即匿名——两种情况都能中断后继续，
+        因为续答靠的是浏览器里保存的参与者编号，不是名字。</small></div>
+    </div>
+    <input type="text" id="nameIn" placeholder="留空 = 匿名" maxlength="60" style="max-width:280px">
+    <p style="margin-top:14px"><button class="primary" id="joinGo">开始</button></p>
+    <details style="margin-top:14px">
+      <summary style="cursor:pointer;font-size:12.5px;color:var(--ink3)">已经答过一半？</summary>
+      <p style="margin-top:8px">同一浏览器直接打开原链接就会接着上次的地方继续。
+        换了设备或清过浏览器数据，就把上次的参与者编号填进来：</p>
+      <div class="row"><input type="text" id="codeIn" placeholder="P1A2B3C4D5" style="max-width:240px">
+        <button id="codeGo">继续</button></div>
+    </details>`;
   $('main').replaceChildren(p);
-  const go = () => {
+
+  $('joinGo').addEventListener('click', async () => {
+    $('joinGo').disabled = true;
+    const name = $('nameIn').value.trim();
+    if (PREVIEW) { S.code = 'PREVIEW'; showConsent(); return; }
+    try {
+      const r = await apiPost({ action: 'join', survey: S.survey,
+                                name, item_ids: S.items.map(i => i.id) });
+      S.code = r.code;
+      S.order = r.item_ids;
+      S.answers = {};
+      rememberPid(S.survey, r.code);
+      const u = new URL(location.href);
+      u.searchParams.set('p', r.code);
+      history.replaceState(null, '', u);       // 刷新/收藏都还能回到自己的进度
+      $('codePill').textContent = S.code;
+      $('codePill').hidden = false;
+      showConsent();
+    } catch (e) {
+      $('joinGo').disabled = false;
+      showJoin('登记失败：' + e.message + '。请检查网络后重试。');
+    }
+  });
+
+  const resume = () => {
     const v = $('codeIn').value.trim().toUpperCase();
-    if (v) location.search = `?code=${encodeURIComponent(v)}`;
+    if (!v) return;
+    const u = new URL(location.href);
+    u.searchParams.set('p', v);
+    location.href = u.toString();
   };
-  $('codeGo').addEventListener('click', go);
-  $('codeIn').addEventListener('keydown', e => { if (e.key === 'Enter') go(); });
+  $('codeGo').addEventListener('click', resume);
+  $('codeIn').addEventListener('keydown', e => { if (e.key === 'Enter') resume(); });
+}
+
+/* 参与者编号按问卷分别记在本地：同一台机器可以先后做两份问卷，互不覆盖。 */
+function rememberPid(survey, pid) {
+  try { localStorage.setItem('pid:' + survey, pid); } catch (e) { /* 存不下不影响本次作答 */ }
+}
+function recallPid(survey) {
+  try { return localStorage.getItem('pid:' + survey) || ''; } catch (e) { return ''; }
 }
 
 function showFatal(msg) {
@@ -395,21 +442,24 @@ async function boot() {
   S.items = bank.items;
   S.meta = bank.meta || {};
 
-  S.code = (new URL(location.href).searchParams.get('code') || '').trim().toUpperCase();
+  // 问卷种类由链接决定（?s=judge / ?s=quality），身份由 p= 或 localStorage 决定。
+  const q = new URL(location.href).searchParams;
+  S.survey = q.get('s') || q.get('survey') || 'judge';
+  if (!SURVEYS[S.survey]) S.survey = 'judge';
+  // ?code= 是预先生成的邀请码，仍然支持；?p= 是自助登记拿到的参与者编号
+  S.code = (q.get('p') || q.get('code') || recallPid(S.survey) || '').trim().toUpperCase();
 
   if (PREVIEW) {
-    // 预览模式用 ?survey=quality 切换要看的那一份
-    S.survey = (new URL(location.href).searchParams.get('survey') || 'judge');
-    if (!SURVEYS[S.survey]) S.survey = 'judge';
     const prefix = S.survey === 'quality' ? 'B-' : 'A-';
     S.code = S.code || 'PREVIEW';
     S.order = S.items.filter(i => i.id.startsWith(prefix)).map(i => i.id);
     if (!S.order.length) S.order = S.items.map(i => i.id);
   } else {
-    if (!S.code) { showCodePrompt(); return; }
+    if (!S.code) { showJoin(); return; }
     let st;
     try { st = await apiGet({ action: 'state', code: S.code }); }
-    catch (e) { showCodePrompt('邀请码无效，或服务器暂时无法连接：' + e.message); return; }
+    catch (e) { showJoin('没找到这个参与者编号，或服务器暂时无法连接：' + e.message); return; }
+    rememberPid(st.survey || S.survey, S.code);
     S.order = (st.item_ids && st.item_ids.length) ? st.item_ids : S.items.map(i => i.id);
     S.survey = st.survey || 'judge';
     S.surveyTitle = st.survey_title || '';
