@@ -1,0 +1,750 @@
+{
+ "meta": {
+  "theme": "auto_research",
+  "seed": 20260919,
+  "survey": "same-idea-judge",
+  "shown_fields": [
+   "contribution_type",
+   "problem",
+   "motivation",
+   "proposed_approach",
+   "research_plan"
+  ],
+  "asked_fields": [
+   "problem",
+   "motivation",
+   "research_plan"
+  ],
+  "judge_model": "gpt-5.6-luna",
+  "judge_prompt_version": "v4fields-schemav2-single-random",
+  "cell_fields": [
+   "problem",
+   "motivation"
+  ],
+  "n_per_cell": 5,
+  "n_items": 40,
+  "build_hash": "2bdfb776eae6"
+ },
+ "items": [
+  {
+   "id": "D-31",
+   "part": "A",
+   "A": {
+    "contribution_type": "method",
+    "problem": "Current approaches to analyzing Gene Regulatory Networks for therapeutic target discovery are not sufficiently automated to rapidly uncover disease mechanisms and therapeutic targets.",
+    "motivation": "Accelerating the discovery of disease mechanisms and therapeutic targets becomes possible, and large language models offer new capabilities for automating GRN hypothesis generation, experiment planning, and analysis.",
+    "proposed_approach": "An autonomous AI system built on large language models integrated with traditional statistical methods, automating hypothesis generation, experiment planning, and analysis of Gene Regulatory Networks. The system is evaluated using the GenoTEX and BixBench benchmark datasets.",
+    "research_plan": "Evaluation on the GenoTEX and BixBench benchmark datasets serves as evidence for both claims. The abstract does not name baselines, metrics, ablations, robustness checks, or failure conditions."
+   },
+   "B": {
+    "contribution_type": "method",
+    "problem": "Gene target identification for viral infectious disease control in insects is not currently automated in a way that achieves the desired efficiency and accuracy.",
+    "motivation": "LLMs' ability to analyze and generate biological data makes them a timely tool for improving this identification, and success would accelerate target discovery for viral disease control in insects.",
+    "proposed_approach": "The proposed approach fine-tunes LLM agents for the specific task of identifying potential gene targets for viral infectious disease control in insects, using existing literature and gene expression data. The agents analyze and generate biological data to propose candidate gene targets.",
+    "research_plan": "The evidence consists of evaluating the effectiveness of the fine-tuned LLM agents on gene target identification and assessing their limitations and potential biases. The abstract does not specify baselines, metrics, datasets, or a threshold for success."
+   }
+  },
+  {
+   "id": "R-18",
+   "part": "A",
+   "A": {
+    "contribution_type": "method",
+    "problem": "Existing AI scientist systems are difficult to diagnose because they lack modularity, systematic prompt grounding, and observability into long-running behavior.",
+    "motivation": "Solving this would allow unattended research pipelines to be audited and trusted, supporting checkable research artifacts and rigorous AI co-scientist research.",
+    "proposed_approach": "The proposed system is an autonomous agent that executes literature review, hypothesis formation, computational experimentation, manuscript drafting, and adversarial peer review as a single unattended run. It uses a modular supernode architecture for stage-wise backend swapping, protocols grounded in curated research-method checklists that also define reviewer rubrics, and a diagnostics layer that records file-based artifacts, message traces, and state transitions.",
+    "research_plan": "The paper evaluates the proposed agent on open-domain QA benchmarks and biomedical/longevity case studies. (1) The unattended-execution claim is evidenced by end-to-end completion of the pipeline in these settings. (2) The checkability and observability claim is evidenced by the recorded file-based artifacts, message traces, and state transitions produced by the diagnostics layer. No named baselines, metrics, or explicit failure conditions are stated."
+   },
+   "B": {
+    "contribution_type": "artifact",
+    "problem": "Existing tools for scientific discovery do not yet provide fully autonomous end-to-end research automation, from hypothesis generation to manuscript preparation.",
+    "motivation": "Fully automating the research cycle would accelerate scientific knowledge discovery and support more efficient human-AI collaboration.",
+    "proposed_approach": "The proposed system integrates multi-agent systems, large language models, and principled scientific discovery frameworks. It extends existing frameworks such as VIRSCI, PiFlow, and OmniScientist to create a robust and generalizable autonomous research system.",
+    "research_plan": "The proposed system will be evaluated across various scientific domains. The evaluation focuses on discovery efficiency, solution quality, and human-AI collaboration; the abstract does not specify baselines, metrics, domains, or failure conditions."
+   }
+  },
+  {
+   "id": "D-27",
+   "part": "A",
+   "A": {
+    "contribution_type": "method",
+    "problem": "LLM-based AI-scientist agents can propose theories, write code, and run experiments, but they struggle at choosing which experiment to run next: they improvise experiments or fit a single response surface and are largely insensitive to experimental feedback. The classical remedy—sequential Bayesian experimental design that maximizes expected information gain over competing models—has not been integrated with LLM-generated mechanistic hypotheses; existing hybrids compute the posterior in the LLM's own text beliefs rather than from realized data under executable generative models.",
+    "motivation": "Integrating LLM-generated mechanistic hypotheses with statistically grounded acquisition would let discovery identify the true generating mechanism in fewer experiments, and recent negative results argue this integration is exactly what is missing.",
+    "proposed_approach": "The framework comprises an LLM that proposes a library of candidate mechanistic hypotheses grounded as executable probabilistic generative models with parameters, and its plausibility statements are recalibrated into a proper prior over hypotheses by leave-one-out predictive scoring, never self-reports. A Bayesian model-discrimination module selects each next experiment to maximize expected information gain across hypotheses and updates a proper posterior from realized outcomes. The LLM is re-invoked as theorist only when a residual gate shows that no carried hypothesis explains the data.",
+    "research_plan": "(1) The claims are evaluated on interactive discovery benchmarks built on generative ground-truth environments, comparing the proposed framework against prompting-only agents, single-model Bayesian optimization, and LLM-internal-surprise planners, including settings where the initial hypothesis library is imperfect. The evidence for the efficiency claim is the number of experiments required to identify the true generating mechanism, with the claim failing if the framework does not identify it in strictly fewer experiments than the baselines. The posterior-concentration claim is assessed by whether posterior concentration tracks truth, failing if it does not. No additional ablations or matched-compute conditions are specified in the abstract."
+   },
+   "B": {
+    "contribution_type": "method (secondary: artifact)",
+    "problem": "Interactive AI-scientist benchmarks consistently show that LLM agents choose experiments poorly and degrade over long discovery horizons, yet the field lacks a controlled way to test why: whether the bottleneck is hypothesis generation, single-step design heuristics, or maintenance of a coherent belief over an explicit set of competing hypotheses across many experiments.",
+    "motivation": "A controlled benchmark that can separate state-tracking and hypothesis-coverage failures would let improvements target the actual bottleneck rather than guess at it.",
+    "proposed_approach": "The proposed system plus benchmark is centered on a specialized scientific data-management layer whose state is an explicit hypothesis store of candidate generative models with priors, an evidence store logging which hypotheses each past experiment discriminated, and a belief engine that performs exact Bayesian updates and selects the next experiment by computed expected information gain. The LLM is confined to proposing and expanding the hypothesis set and interpreting explicit coverage signals, while belief updating and next-experiment choice are computed rather than guessed from text. The benchmark includes closed-world environments, where the truth is guaranteed to lie in a disclosed grammar, and open-world variants, where the truth requires an LLM-proposed expansion, so that state-tracking and hypothesis-coverage failures can be separated and attributed.",
+    "research_plan": "(1) To test the efficiency claim, compare the proposed system against an LLM designing from conversational memory and an LLM coupled to a single fitted model in the closed-world and open-world environments, counting experiments required to identify the hidden ground-truth model. (2) To test the failure-mode claim, inspect residual failures for whether they are detect-and-report coverage errors rather than silent confident misidentifications. (3) Use the closed-world variant, where the truth lies in a disclosed grammar, to isolate state-tracking failures, and the open-world variant, where the truth requires an LLM-proposed expansion, to isolate hypothesis-coverage failures."
+   }
+  },
+  {
+   "id": "D-39",
+   "part": "A",
+   "A": {
+    "contribution_type": "method",
+    "problem": "Mechanistic discovery of how translation factors control protein synthesis rates remains labor-intensive and hypothesis-driven at human pace.",
+    "motivation": "Translation regulation is fundamental to cellular biology.",
+    "proposed_approach": "The proposed framework is an autonomous AI system integrating four components: LLM-based hypothesis generation grounded in a structured knowledge graph of known translation mechanisms; automated experimental design for in vitro translation kinetics, single-molecule tracking, and cryo-EM validation studies; symbolic reasoning to refine mechanism models against experimental data; and safety-aware automation for hazardous translation factor screening.",
+    "research_plan": "The system will be benchmarked on 15 focused hypotheses about initiation factor behavior under cellular stress; predictions will be validated against published mechanistic studies, and the system will generate 3 novel, testable hypotheses for wet-lab validation."
+   },
+   "B": {
+    "contribution_type": "method",
+    "problem": "Elucidating chemical reaction mechanisms experimentally remains time-consuming and manual, and current autonomous chemistry systems focus on optimization and property discovery while scientific reasoning agents generate hypotheses in abstract domains. No current system autonomously closes the loop from mechanistic hypotheses to discriminating laboratory experiments and iterative mechanism refinement.",
+    "motivation": "Mechanistic understanding is fundamental to rational synthesis, catalysis design, and molecular engineering, so automating mechanism elucidation would accelerate these applications; available automated laboratory infrastructure and information-theoretic experimental design make closed-loop mechanistic reasoning tractable now.",
+    "proposed_approach": "The proposed framework generates competing mechanistic hypotheses for a reaction, applies information-theoretic criteria to design experiments that discriminate among those hypotheses, executes the selected experiments in automated laboratories, and uses the resulting observations to iteratively refine the mechanism model. This closed loop aims to systematically narrow the mechanistic hypothesis space and resolve ambiguities.",
+    "research_plan": "The planned evaluation benchmarks the framework on reactions with known but non-obvious mechanisms and compares its experimental design against that of human experts, which bears on whether the information-theoretic design systematically narrows the hypothesis space. A further demonstration on reactions with unclear mechanisms bears on discovery in ambiguous cases."
+   }
+  },
+  {
+   "id": "R-03",
+   "part": "A",
+   "A": {
+    "contribution_type": "method",
+    "problem": "Conventional development of time series forecasting models often faces data scarcity, distribution shift, and diminishing returns from manual iteration.",
+    "motivation": "Accurate forecasting underpins decisions in many domains, making reduced manual iteration and lower development cost worthwhile.",
+    "proposed_approach": "The framework autonomously generates, validates, and optimizes forecasting algorithm code through an iterative self-evolution loop. It combines a search procedure guided by a statistically normalized advantage score rather than fixed rewards, code review with a running prompt that is refined by corrective patterns from successfully executed solutions, and global steerable reasoning that compares each evaluated node to global best- and worst-performing solutions to transfer information across trajectories. A MAP-Elites archive maintains architectural diversity.",
+    "research_plan": "The paper evaluates the framework on four datasets and two metrics, comparing against strong baselines TimeMixer, Timer, and SEMixer. Support would require the proposed framework to perform at least as well as or better than these baselines across the dataset-metric comparisons; consistent underperformance would count as failure. The abstract does not describe ablations isolating individual mechanisms or matched-compute details."
+   },
+   "B": {
+    "contribution_type": "method",
+    "problem": "Stock market forecasting has been dominated by manual method design and incremental improvements within existing model families.",
+    "motivation": "Autonomous discovery could accelerate forecasting innovation and bridge autonomous scientific discovery with financial machine learning.",
+    "proposed_approach": "An autonomous AI research agent that discovers, implements, and validates novel time-series forecasting methodologies for equity prediction. It synthesizes domain knowledge, proposes testable hypotheses about market dynamics, and rigorously validates each method using walk-forward backtesting with domain-appropriate metrics, producing ablation studies and statistical significance testing.",
+    "research_plan": "The paper evaluates the approach on historical equity data by having the agent discover methods, validate them with walk-forward backtesting and domain-appropriate metrics, compare discovered methodologies against published baselines, and produce ablation studies and statistical significance testing to support research quality; no explicit failure condition or matched compute/latency constraints are stated."
+   }
+  },
+  {
+   "id": "D-21",
+   "part": "A",
+   "A": {
+    "contribution_type": "empirical_analysis (secondary: artifact)",
+    "problem": "Autonomous AI-scientist systems produce manuscripts with methodological faults that are invisible when only the final paper is read, and no benchmark exists for evaluating auditor agents that inspect execution traces for such faults.",
+    "motivation": "Because trace logs and code enable more effective detection of research-soundness failures than the paper alone, making auditor performance measurable would convert the governance debate around AI-generated research into falsifiable propositions.",
+    "proposed_approach": "The proposed benchmark supplies the complete execution trace of an autonomous research run: code diffs, executed commands, stdout/stderr, intermediate artifacts, and the final manuscript. An auditor must render a verdict on each central quantitative claim, detect injected methodological faults from a taxonomy grounded in prior work, and localize each fault to a concrete trace step. Ground truth is produced by expert-validated fault injection into otherwise-clean, fully re-executable runs from open AI-Scientist-style pipelines. A sandboxed re-execution tool is provided that recomputes the run's own metrics.",
+    "research_plan": "(1) The claim that frontier LLM auditors given full traces flag only a minority of deep-tier faults is tested by running frontier LLM auditors on the benchmark traces and measuring fault recall against injected ground truth; support requires low recall on deep-tier faults, while failure would be auditors flagging most deep-tier faults. (2) The claim that sandboxed re-execution outperforms static trace reading is tested by comparing auditors with and without the tool on claim-verdict accuracy and fault recall, holding the underlying auditor and trace fixed; support requires substantial gains on both metrics, and failure would be no substantial gain. Ground-truth quality is established by expert validation of fault injections and by requiring clean runs to be fully re-executable."
+   },
+   "B": {
+    "contribution_type": "artifact",
+    "problem": "Research artifacts generated by autonomous systems are rarely checked for numerical truthfulness against ground truth; independent evaluations document hallucinated numbers and process defects, and the community's governance response has been to mandate code and trace-log submission without any benchmark asking whether an auditor agent can use those artifacts to find defects.",
+    "motivation": "A benchmark would turn the current governance debate over artifact submission into a measurable question and supply the missing evaluation layer between systems that generate research and systems that must certify it.",
+    "proposed_approach": "The proposed benchmark consists of about 100 small but genuinely executed ML research studies, each with machine-checkable atomic claims and a canonical reference computation. Semantic-integrity defects are seeded by a corruptor stage that re-executes mutated pipelines or rewrites reports against real run ledgers, and every defective study has an intact twin. Auditor agents are evaluated on a graded access ladder: paper-only, code, code plus execution traces, and interactive sandbox re-execution. The benchmark defines defect classes spanning artifact-derivable and process-hidden defects.",
+    "research_plan": "The evaluation measures auditor detection of artifact-derivable versus process-hidden defects across each access level, using canonical reference computations as ground truth. Intact twins serve to measure false accusations. A falsifiable failure condition follows from the stated asymmetry: if full white-box access does not sharply improve artifact-derivable detection, or if process-hidden detection rises with access, the hypothesis is not supported. Access conditions are held matched per study by comparing the same study across the graded ladder."
+   }
+  },
+  {
+   "id": "D-23",
+   "part": "A",
+   "A": {
+    "contribution_type": "method",
+    "problem": "Existing AI-scientist systems either evaluate research ideas offline as static text or let an autonomous loop execute the first output of an ungoverned ideation step; fabrication audits indicate agents spend experiment budget on results that do not verify. It is not established how to select machine-generated ideas so that experiment budget flows to informative experiments rather than non-verifying ones.",
+    "motivation": "Reducing non-informative experiments would improve knowledge gained per unit experiment budget, and the existing offline idea-evaluation literature and autonomous-pipeline literature provide components that make a triage stage tractable.",
+    "proposed_approach": "Each machine-generated idea is represented as a falsifiable hypothesis entry containing a testable claim, an executable falsification test, a predicted outcome that discriminates among hypotheses, and a resource estimate. A panel scores candidates on literature-grounded novelty, discriminating power under noise, and execution feasibility; a racing scheduler adaptively allocates a fixed experiment budget and stops low-yield arms early. Verified outcomes update the panel's beliefs, forming a generate–triage–verify–update loop whose objective is knowledge gained per unit experiment budget.",
+    "research_plan": "(1) The comparative claims are tested on ML-research experiment benchmarks and a synthetic open-discovery sandbox with known ground truth, against the three stated baselines: LLM-default first-idea execution, static novelty-only ranking, and spending the fixed experiment budget on more idea generation instead of selection. (2) The ablation claim is tested by removing or varying the discriminating-power estimate of the falsification test. The evaluation holds a fixed experiment budget and measures knowledge gained per executed experiment and budget spent on non-informative experiments; the claims would fail if the proposed mechanism does not outperform the baselines on those metrics or if the ablation does not show the discriminating-power estimate as the main driver."
+   },
+   "B": {
+    "contribution_type": "method (secondary: artifact)",
+    "problem": "No principled pre-experiment rule exists for deciding which candidate hypotheses produced by autonomous idea generators merit scarce closed-loop experimentation budget; existing rankers assess novelty, supportedness, feasibility, or post-hoc results only in isolation.",
+    "motivation": "Scarce experimentation budget makes pre-experiment triage valuable, since more candidate hypotheses are produced than any lab or compute budget can test.",
+    "proposed_approach": "Learn a calibrated composite of time-frozen literature novelty, empirical discriminability, and feasibility from retrospective hypothesis–outcome pairs, and use it to order a stand-alone candidate pool by expected validated discoveries per unit experiment budget. Evaluate triage policies on a new counterfactual benchmark that time-freezes each candidate at its proposal date and labels it with the experimental outcome reported one to three years later. If outcome-matching precision falls below a pre-registered threshold, use a generative-probabilistic simulated fallback built following prior simulation approaches.",
+    "research_plan": "(1) For H1, compare top-k selections from the proposed score with random, novelty-only, and language-model plausibility baselines on validated discoveries per test. (2) For H2, ablate the discriminability component to test whether it contributes beyond novelty. (3) For H3, test cross-domain transfer of the score against the prior domain-invariant claim. (4) For H4, seed sandbox agents with triage-selected hypotheses and compare recovered model-discovery accuracy against an oracle-budget agent, with the stated success condition of at least 90% oracle accuracy at half the interaction budget. A pre-registered outcome-matching precision threshold defines benchmark validity; if precision falls below it, the benchmark premise fails and the evaluation shifts to a generative-probabilistic simulated fallback. The abstract does not state additional controls held matched across baselines."
+   }
+  },
+  {
+   "id": "R-04",
+   "part": "A",
+   "A": {
+    "contribution_type": "method",
+    "problem": "Optimization of chromatographic methods in analytical chemistry currently requires substantial time and specialized expertise, and its automation is not yet streamlined.",
+    "motivation": "Reducing the time and expertise required could streamline method optimization and make it more accessible.",
+    "proposed_approach": "The proposed work will develop LLM agents and integrate them with experimental automation to automate chromatographic method optimization.",
+    "research_plan": "Evaluate the performance of the developed LLM agents for automating chromatographic method optimization; no specific metrics, baselines, or failure conditions are stated."
+   },
+   "B": {
+    "contribution_type": "artifact (secondary: method)",
+    "problem": "Traditional chromatographic process development depends on human experts, leading to reliance on expert experience, long development cycles, and labor intensity.",
+    "motivation": "Automating the development workflow would reduce expert dependence, labor input, and development time while making process development more broadly applicable.",
+    "proposed_approach": "The proposed platform integrates a domain-specific large language model trained for chromatography, a multi-agent system, and an automated chromatographic experimental device. The multi-agent system consists of four agents that handle domain knowledge answering, experimental design, experimental execution, and data analysis. Together these components execute an automatic workflow covering initial process parameter recommendation, experimental design, automated execution, data analysis, and multi-objective optimization.",
+    "research_plan": "The evidence is a case study on chromatographic purification of Ginkgo biloba leaf extract. The study exercises the full automated workflow and assesses whether the resulting process meets multiple objectives including fraction quality and production efficiency, and whether development time is reduced relative to a conventional human-dependent paradigm. No controlled comparison with other automated methods or ablations is described."
+   }
+  },
+  {
+   "id": "R-12",
+   "part": "A",
+   "A": {
+    "contribution_type": "method",
+    "problem": "Existing LLM-based scientific idea generation methods are limited to computer science and closely related domains, and their applicability to other scientific fields such as data-driven astronomy remains largely underexplored.",
+    "motivation": "The rapid development of scientific discovery demands innovative tools, and recent breakthroughs in generative AI and LLMs offer transformative potential for generating research ideas in data-intensive disciplines like astronomy.",
+    "proposed_approach": "The framework uses LLMs in a human-AI collaborative workflow and integrates four stages: conception, iterative refinement, expert validation, and knowledge integration. It is applied to generate research ideas in data-driven astronomy, where massive telescope and satellite datasets are analyzed with data science methods.",
+    "research_plan": "The paper evaluates the framework through experiments with human expert assessments and model self-evaluation of generated drafts. It compares the framework's generated ideas with human-generated ideas on originality and feasibility across multiple data-driven astronomy topics. For the claim that the framework accelerates discovery cycles, the abstract relies on the same human and model assessments but does not specify an explicit failure condition or matched controls beyond topic coverage."
+   },
+   "B": {
+    "contribution_type": "method",
+    "problem": "Generated scientific hypotheses may lack sufficient novelty, feasibility, or relevance, leaving promising research directions unidentified.",
+    "motivation": "Leveraging LLMs' ability to understand and generate human-like text makes it possible to assist researchers in identifying promising directions and accelerating scientific discovery.",
+    "proposed_approach": "The proposed system is an LLM-based scientific hypothesis generation system integrating hierarchical search and knowledge grounding. It employs multiple techniques to generate hypotheses and is intended to support researchers in identifying promising directions.",
+    "research_plan": "Evaluation is proposed but the abstract gives no baselines, metrics, datasets, or failure conditions; it only indicates that generated hypotheses are to be assessed for novelty, feasibility, and relevance."
+   }
+  },
+  {
+   "id": "R-17",
+   "part": "A",
+   "A": {
+    "contribution_type": "method",
+    "problem": "Efficient and adaptive hypothesis generation in evolutionary algorithms remains an open challenge, particularly for discovering superior hypotheses in complex search spaces.",
+    "motivation": "Large language models can generate and refine hypotheses, and reinforcement learning provides optimization capabilities; combining these with evolutionary search may make hypothesis generation more efficient and tractable for complex optimization problems.",
+    "proposed_approach": "The proposed framework combines evolutionary search with LLM-generated and RL-refined hypotheses: LLMs generate and refine candidate hypotheses, RL optimizes the hypothesis generation process, and evolutionary search provides exploration. The approach is applied to various optimization problems and compared against traditional evolutionary algorithms and LLM-based methods.",
+    "research_plan": "The evidence is comparative evaluation on various optimization problems, with performance compared against traditional evolutionary algorithms and LLM-based methods."
+   },
+   "B": {
+    "contribution_type": "method",
+    "problem": "Existing LLM-based automated heuristic design treats algorithm evolution as a monolithic text generation task, overlooking the coupling between discrete algorithmic structures and continuous numerical parameters; consequently, promising algorithms are often discarded due to uncalibrated constants, and premature convergence arises from simple similarity metrics.",
+    "motivation": "By decoupling structural reasoning from parameter optimization, it becomes possible to retain promising algorithms that would otherwise be discarded and to avoid premature convergence, thereby enabling more effective automated heuristic design for combinatorial optimization.",
+    "proposed_approach": "The proposed framework is a tuning-integrated dynamic evolution system with a nested architecture. An outer parallel island model uses a tree similarity edit distance to maintain structural diversity across evolving heuristics. An inner loop integrates LLM-based logic generation with a differential mutation operator for parameter tuning. A UCB-based scheduler dynamically prioritizes high-yield prompt strategies to allocate resources.",
+    "research_plan": "Extensive experiments across nine combinatorial optimization problems compare the proposed framework against state-of-the-art baselines on solution quality, search efficiency, and computational cost. The abstract does not specify metrics, datasets, ablated components, or failure conditions."
+   }
+  },
+  {
+   "id": "D-33",
+   "part": "A",
+   "A": {
+    "contribution_type": "method",
+    "problem": "Existing AI-driven drug discovery agents optimize lead compounds in isolation; each new hit-to-lead campaign starts without explicit memory of which molecular modifications succeeded or failed in prior runs.",
+    "motivation": "Accumulated structure-activity relationship insights from past campaigns could be mined and reused to bias future optimization decisions and avoid repeating failed modifications.",
+    "proposed_approach": "An autonomous agent system for iterative lead optimization that maintains a learned experience repository of structure-activity relationship insights mined from past optimization campaigns. For new targets, the system retrieves and reasons about relevant prior experiments and uses this to bias hypothesis generation, molecule modification strategies, and structure-activity relationship rule discovery based on accumulated domain knowledge.",
+    "research_plan": "Benchmark the proposed system against non-memory baselines on multi-campaign lead optimization tasks, measuring convergence speed and final compound quality, and validate that retrieved structure-activity relationship insights improve subsequent campaign outcomes."
+   },
+   "B": {
+    "contribution_type": "method",
+    "problem": "Autonomous AI systems for chemistry can generate novel hypotheses and execute experiments at scale, but most lack a mechanism to learn what constitutes a good hypothesis in their target domain; current agents treat hypothesis generation as a one-shot task using pre-trained LLM reasoning and static domain knowledge.",
+    "motivation": "Learning domain-specific knowledge about which hypothesis structures, chemical features, and reasoning patterns correlate with success would make autonomous discovery more effective across repeated experiments.",
+    "proposed_approach": "The proposed framework is an adaptive agent architecture that iteratively improves its hypothesis-generation strategy by observing patterns in experimental feedback. It decouples hypothesis generation from hypothesis ranking: the agent generates diverse candidate hypotheses, scores them using an evolving learned model trained on previous experiment outcomes, and updates its generation strategy based on which hypotheses succeeded. The framework is instantiated in materials discovery and molecular design.",
+    "research_plan": "The paper evaluates the framework in materials discovery and molecular design, comparing convergence and hypothesis quality against fixed-strategy baselines; the abstract does not specify metrics, ablations, or failure conditions, nor what is held matched between the proposed framework and baselines."
+   }
+  },
+  {
+   "id": "D-25",
+   "part": "A",
+   "A": {
+    "contribution_type": "method (secondary: artifact)",
+    "problem": "Existing evaluations for LLM-based materials discovery agents score hypotheses by human/LLM plausibility or by whether a predefined synthesis/optimization loop improves a target property, but neither asks whether an agent can tell which of several mechanistically distinct explanations of the same data is true.",
+    "motivation": "Materials science is driven by identifying the correct mechanism underlying data, and current evaluation schemes do not test this ability, so agents may look successful without possessing the mechanistic discrimination science requires.",
+    "proposed_approach": "The proposed agent maintains an explicit roster of mechanistically distinct, individually falsifiable hypotheses, each expressed as a symbolic or parameterized mechanism with a quantitative prediction signature. It selects the next experiment to maximize expected information gain over mechanism identity rather than property value, executes it on a materials oracle, and retires falsified hypotheses under always-valid sequential error control. It is paired with a suite of materials environments—alloy strengthening, nanomaterial synthesis yield, catalyst activity, and thin-film phase selection—where a hidden ground-truth mechanism is drawn from a family of physically motivated competing mechanisms and observed only through noisy, budgeted measurements, including open-world instances where no roster member is correct.",
+    "research_plan": "(1) The discrimination-efficiency claim is tested by comparing the proposed agent's oracle calls to recover the true mechanism against property-maximizing Bayesian optimization and greedy LLM agents in the proposed environments. (2) The calibration claim is tested by comparing out-of-distribution predictions at matched best-achieved property. (3) The retirement claim is tested by comparing sequentially valid retirement with naive or LLM-judged retirement for false elimination of the true mechanism. Ablations isolate mechanism-conditioned information gain, explicit hypothesis retirement, and symbolic rather than scalar hypothesis representation as load-bearing components."
+   },
+   "B": {
+    "contribution_type": "method (secondary: artifact)",
+    "problem": "The step that decides what is true among competing mechanistic hypotheses—when several hypotheses explain the same observations, which single experiment cheapest separates them, and when evidence is still insufficient to commit—remains unautomated.",
+    "motivation": "Automating this step would close the loop between hypothesis generation and experimental testing, avoiding wasted experiments, premature commitment, and under-determined conclusions in catalytic mechanism elucidation.",
+    "proposed_approach": "The proposed LLM agent ingests a catalytic-oxidation system, enumerates competing mechanistic hypotheses as structured objects with explicit measurable signatures (kinetic orders, kinetic isotope effects, 18O incorporation, scavenger/poison response, order-of-addition, temperature dependence, catalyst-phase dependence), scores a library of executable experiments by expected information gain per unit cost over the hypothesis set, executes the top-ranked experiment in a closed loop, and stops when one hypothesis dominates or the system is declared under-determined. A benchmark of 12–15 generative kinetic models of oxidation mechanisms with hidden ground-truth mechanisms and hidden parameters is constructed; evaluation will occur in simulation, by re-analysis of published mechanistic studies, and on a small real validation set.",
+    "research_plan": "(1) The core efficiency claim will be tested by evaluating the agent in simulation on the benchmark and comparing the number and cost of experiments against Bayesian-optimization outcome sweeps, unranked LLM experiment suggestions, random selection, and a fixed standard discriminant panel; support requires significantly fewer and cheaper experiments to identify the hidden ground-truth mechanism. (2) The calibration claim will be assessed on the same evaluations and on re-analysis of published mechanistic studies and a small real validation set; support requires abstention when evidence is insufficient and commitment only when one hypothesis dominates."
+   }
+  },
+  {
+   "id": "R-02",
+   "part": "A",
+   "A": {
+    "contribution_type": "method",
+    "problem": "Quantitative evidence synthesis remains largely manual and difficult to scale.",
+    "motivation": "Making quantitative evidence synthesis scalable would support reliable, evidence-based decision-making across science, medicine, education, and policy.",
+    "proposed_approach": "The proposed system is an end-to-end multi-agent system for automated meta-analysis. Given a research question in natural language, it formulates a search strategy, retrieves scientific literature, screens candidate studies, assesses full-text eligibility, extracts quantitative statistics, computes standardized effect sizes, performs random-effects meta-analysis, supports heterogeneity analysis across moderators and risk-of-bias assessment, and outputs a transparent PRISMA-aligned report.",
+    "research_plan": "(1) The end-to-end capability claim is exercised by applying the system to a research question and having it produce a PRISMA-aligned report after screening candidate studies and extracting quantitative claims. (2) The agreement claim is tested by comparing the system's pooled effect estimates with expert-conducted meta-analyses using Hedges' g; close agreement is support, and lack of close agreement would count against the claim."
+   },
+   "B": {
+    "contribution_type": "method",
+    "problem": "Recent LLM-based systems automate article screening, data extraction, and qualitative synthesis in systematic reviews, but the quantitative meta-analysis phase — pooling extracted data, managing heterogeneity, and drawing consensus — remains largely manual.",
+    "motivation": "Automating this phase would remove a labor-intensive bottleneck in evidence-based science and scale systematic review synthesis.",
+    "proposed_approach": "The proposed LLM-agent framework combines structured data extraction with intelligent conflict detection, feeds heterogeneous evidence into statistical meta-analysis engines, and uses reasoning agents to interpret results, flag publication bias and methodological concerns, and generate interpretable synthesis narratives. A pilot implementation targets biomedical meta-analyses.",
+    "research_plan": "A pilot implementation targeting biomedical meta-analyses will be used to demonstrate automation of study-level pooling, heterogeneity analysis, sensitivity testing, and generation of human-auditable evidence summaries; these demonstrations serve as the evidence for the framework's end-to-end automation and scalability claims. No named baselines, comparative metrics, or explicit failure conditions are stated."
+   }
+  },
+  {
+   "id": "R-20",
+   "part": "A",
+   "A": {
+    "contribution_type": "method (secondary: theory)",
+    "problem": "Deployment of self-driving laboratories introduces unprecedented safety challenges that differ from traditional laboratories or purely digital AI, and there is a disconnect between AI-generated syntactically correct commands and their physical safety implications.",
+    "motivation": "Self-driving laboratories promise to compress research timelines from years to weeks, but safe deployment requires robust safety boundaries, making this an essential precondition for responsible acceleration of AI-driven discovery.",
+    "proposed_approach": "The proposed framework consists of three synergistic components: formally defined operational design domains that constrain system behavior within mathematically verified boundaries; control barrier functions that provide real-time safety guarantees through continuous state-space monitoring; and a transactional safety protocol that ensures atomic consistency between digital planning and physical execution. The framework is grounded by analyzing how existing implementations, including UniLabOS and the Osprey architecture, instantiate these safety principles. It also supplies theoretical foundations and practical implementation guidance for safe deployment.",
+    "research_plan": "Evidence for the central-challenge claim is conceptual analysis of the gap between AI command syntax and physical safety. The framework-adequacy claim is supported by formal definitions of operational design domains and control barrier functions and by analysis of UniLabOS and the Osprey architecture as instantiations. The necessity claim is evaluated against the LabSafety Bench by testing current foundation models for safety failures; the abstract gives no explicit failure condition or matched-control design."
+   },
+   "B": {
+    "contribution_type": "method (secondary: artifact)",
+    "problem": "End-to-end AI scientist systems are evaluated almost exclusively on engineering surfaces such as improving baseline-code metrics, producing reviewable papers, or executing experiment scripts, while whether the agent converges on the true hidden mechanism of a phenomenon remains unmeasured.",
+    "motivation": "Measuring mechanism recovery matters because an agent can appear competent on engineering benchmarks while failing to learn the underlying mechanism, so current evaluations may confer false confidence in AI scientists.",
+    "proposed_approach": "The work has two parts. First, it introduces a controlled closed-loop mechanism-recovery paradigm consisting of a suite of controlled stochastic environments, each governed by a hidden ground-truth mechanism such as enzyme kinetics, epidemic dynamics, or predator-prey variants, engineered so that structurally distinct mechanisms are confusable under naive probing yet separable through specific discriminating interventions. Second, it builds an architecture that emphasizes falsification: an LLM proposes candidate mechanisms, each candidate is compiled into an executable stochastic simulator, the next experiment is chosen to maximize expected information gain over the compiled ensemble, and failures of predictive checks trigger the proposal of new mechanisms.",
+    "research_plan": "(1) The first hypothesis is tested by comparing recovery of hidden mechanisms at a fixed observation budget between the proposed expected-information-gain selection and LLM agents that select experiments heuristically. (2) The second hypothesis is tested by holding selection costs equal and separating the contribution of self-written simulator code from experiment selection. (3) The third hypothesis is tested by taking an agent optimized for baseline improvement, running it on current benchmarks, and measuring whether it nevertheless fails to recover the mechanism, treating recovery and improvement as separate axes. The abstract frames these hypotheses as falsifiable but does not enumerate metrics or failure thresholds."
+   }
+  },
+  {
+   "id": "R-07",
+   "part": "A",
+   "A": {
+    "contribution_type": "method (secondary: artifact)",
+    "problem": "AI-assisted research compresses ideation, implementation, evaluation, and manuscript writing into a single interactive loop; while useful, this compression creates a publication risk because paper claims can become easier to state than to audit.",
+    "motivation": "The compression is useful, so it is worth retaining that speed while making the resulting claims auditable rather than giving up the loop.",
+    "proposed_approach": "The proposed approach is an evidence-gated control plane for AI-assisted computational research. It models research questions, task contracts, evidence objects, claim ledgers, closeouts, and paper bindings as durable project state, realized as a repository-backed runtime. The technical report specifies the protocol, state model, transition rules, claim-admission algorithm, and insight-compounding mechanism.",
+    "research_plan": "The evidence consists of a full experimental record across nine versions: a self-hosting case study, a controlled task-suite study with component ablations, a mathematical olympiad evaluation, and a supplementary SciCode boundary experiment using the official generated-code harness; artifacts, manifests, and verification reports are preserved in the project repository."
+   },
+   "B": {
+    "contribution_type": "artifact (secondary: method)",
+    "problem": "Autonomous AI-scientist systems now produce complete research papers, but text-only LLM reviewers fail to catch hallucinated results and unsupported claims; existing provenance infrastructure and reproduction benchmarks either capture execution records or re-run human papers from scratch, not whether an AI-scientist's claims are grounded in the execution record of the very system that wrote them at claim granularity.",
+    "motivation": "With such systems increasingly capable of producing papers with fabricated or untraceable results, claim-level integrity needs to become a property decidable from execution provenance rather than from text, otherwise unreliable outputs pass current quality gates.",
+    "proposed_approach": "The work introduces an auditing task and two artifacts. The first is a corpus of research reports produced end-to-end by open autonomous AI-scientist systems and by human control authors inside an externally instrumented sandbox; the sandbox records file diffs, executed code, stdout/stderr, timestamps, and a W3C PROV graph, and each atomic empirical claim is human-labeled as verified, contradicted, unsupported, or ambiguous against that record. The second is an automated verifier that combines deterministic provenance-index queries (artifact existence, metric reconciliation, temporal/causal ordering, selection auditing) with LLM-based claim extraction and residual judgment.",
+    "research_plan": "The planned evaluation compares text-only frontier reviewers with trace-grounded auditing on the corpus, measuring recall and precision for detecting ungrounded claims at claim granularity. Support requires that text-only reviewers fail to detect ungrounded claims while the trace-grounded verifier detects them precisely; a failure would occur if trace-grounded auditing did not improve over text-only review. The corpus's per-claim labels against the execution record serve as the ground truth for verified, contradicted, unsupported, and ambiguous claims."
+   }
+  },
+  {
+   "id": "D-38",
+   "part": "A",
+   "A": {
+    "contribution_type": "method (secondary: artifact)",
+    "problem": "AI-scientist systems now generate, execute, and write up complete research pipelines, but the conclusion-reliability of these systems — the probability that a confidently reported finding is actually true — has never been directly measured, because published evaluations run agents in environments where a positive effect is known to exist, so discovery attempts are scored only on recall.",
+    "motivation": "Directly measuring false-discovery rate, recall, and calibration would make it possible to judge whether reported findings from these pipelines can be trusted and to design better safeguards; currently no such measurement exists.",
+    "proposed_approach": "The work introduces a benchmark of environments with hidden ground truth spanning true-effect worlds, null worlds with no effect, and confounded worlds where a predictive but non-causal association can be mistaken for an effect, together with claim-level ground-truth labels enabling measurement of false-discovery rate, recall, and confidence calibration. Separately, it introduces a falsification architecture in which the agent that proposes a hypothesis is structurally separated from an independently scored refuter agent with opposing incentives; the two agents come from different model families, have no shared reasoning trajectory, and operate under a pre-registered analysis plan on data the proposer never touched.",
+    "research_plan": "(1) For the falsification claim, the plan compares the proposed adversarial architecture against same-model self-critique baselines such as Baby-AIGS's falsification agent and AI Scientist-v2's reviewer loop on false-positive rate in null and confounded environments and on true-positive recall in signal environments; support is a false-positive rate below a pre-specified target where the baseline is predicted to exceed it, with recall not degraded, while held-matched resources are not specified. (2) A negative effect of independence on false-positive rate would falsify the self-preference rationale. (3) The benchmark claim is supported by the construction of hidden ground truth and claim-level labels, which allow false-discovery rate, recall, and calibration to be computed; no separate failure condition for the benchmark alone is stated, and the abstract notes it would still stand as a reliability instrument if independence does not help."
+   },
+   "B": {
+    "contribution_type": "method",
+    "problem": "End-to-end AI Scientist systems now produce workshop-accepted papers, but audits find large fractions of their experiments fail, results are flawed or hallucinated, and methodological pitfalls are invisible from the final paper alone; the structural flaw is that the same agent proposes and verifies hypotheses, and LLM self-critique is fragile, self-preferential, and blind to faulty research logic.",
+    "motivation": "Because such systems are beginning to enter the scientific record, unreliable self-verification threatens the trustworthiness of automated discovery and creates a need to separate proposal from falsification.",
+    "proposed_approach": "The proposed discovery loop separates hypothesis proposal from verification: a proposer agent advances hypotheses and implementations, while a separate falsifier agent, blinded to the proposer's reasoning and rewarded only for cheap successful refutations, must fail to overturn a finding before it is accepted into the scientific record. It is evaluated on a ground-truth benchmark that seeds known-true, known-false, and null-effect claims into small-scale ML and equation-discovery task families. Comparisons use proposer-only, self-critique, and independent-but-aligned verifier baselines at matched retention of true discoveries. Ablations remove the falsifier's blindness, invert its reward, and strip its code-execution access.",
+    "research_plan": "(1) To test the reduction claim, the benchmark measures false-discovery rate and retention of true discoveries against proposer-only, self-critique, and independent-but-aligned verifier baselines; lower false-discovery rate at matched retention would count as support, while lost true discoveries would count as failure. (2) To identify which ingredient drives any improvement, ablations remove the falsifier's blindness, invert its reward, and strip its code-execution access; if no ablation changes the outcome, the ingredient-specific contribution would be unsupported. The design is intended to settle the open question of whether independent adversarial refutation beats self-verification or whether raw verification capability, not incentive structure, is the binding constraint."
+   }
+  },
+  {
+   "id": "R-05",
+   "part": "A",
+   "A": {
+    "contribution_type": "artifact (secondary: empirical_analysis)",
+    "problem": "End-to-end autonomous scientific research capability of AI coding agents remains difficult to verify.",
+    "motivation": "As AI coding agents are increasingly used for scientific work, a verifiable and reproducible measure of autonomous scientific research is needed to track progress and identify failure modes.",
+    "proposed_approach": "The benchmark consists of 40 tasks from 10 scientific domains, each grounded in a real published paper, and provides related literature and raw data while hiding the target paper during evaluation. Expert-curated multimodal rubrics decompose the target scientific artifacts into weighted criteria to score target-paper-level re-discovery and allow new discovery. Seven autonomous research agents are evaluated under a unified protocol and seventeen native LLMs are evaluated through a lightweight evaluation harness.",
+    "research_plan": "(1) Evidence for benchmark adequacy consists of evaluating seven autonomous research agents and seventeen native LLMs under a unified protocol on the 40 tasks, with scoring by expert-curated multimodal rubrics. (2) Evidence for the failure-mode claim comes from an error analysis categorizing failures into experimental protocol mismatch, evidence mismatch, and missing scientific core. The abstract does not state what is held matched across systems or explicit success thresholds; support would be target-paper-level criteria being met, while the qualitative failure condition is not meeting those criteria."
+   },
+   "B": {
+    "contribution_type": "method",
+    "problem": "Autonomous AI scientist systems can generate research ideas and draft papers, but they suffer an implementation gap in which agents fail to execute rigorous experiments, producing unverified claims, metric misuse, and hallucinated completion statuses.",
+    "motivation": "Structured execution governance and principled falsification integration are needed to make autonomous scientific research trustworthy rather than merely producing plausible papers.",
+    "proposed_approach": "A multi-agent framework that integrates pre-execution acceptance criteria schemas, execution sandbox verification gates, and falsification-driven hypothesis re-planning. It maps execution anomalies back to the underlying research hypothesis to enable principled failure analysis and closed-loop experiment refinement.",
+    "research_plan": "The evidence is extensive evaluation on standardized AI scientist benchmarks, targeting false scientific claims, experimental fidelity, and research paper quality. No explicit failure conditions, named baselines, or matched-resource controls are stated."
+   }
+  },
+  {
+   "id": "D-35",
+   "part": "A",
+   "A": {
+    "contribution_type": "empirical_analysis",
+    "problem": "Traditional topic modeling methods often produce topics that are difficult to interpret, and existing topic modeling metrics may lack accuracy and coherence.",
+    "motivation": "Recent studies showing that large language models can improve topic modeling outcomes make it timely to examine fine-tuned LLMs as an alternative.",
+    "proposed_approach": "Fine-tune large language models for topic modeling; evaluate the fine-tuned models against traditional topic modeling methods using interpretability and coherence metrics; and explore the impact of fine-tuning on topic modeling outcomes.",
+    "research_plan": "The evaluation compares fine-tuned LLMs with traditional topic modeling methods on interpretability and coherence metrics and examines how fine-tuning affects topic modeling outcomes; no baselines, datasets, metrics, matched resources, or failure conditions are specified."
+   },
+   "B": {
+    "contribution_type": "method",
+    "problem": "Traditional topic modeling methods often rely on pre-trained models that may not fully capture the nuances of specific domains.",
+    "motivation": "Fine-tuning LLMs on domain-specific datasets could potentially improve the interpretability, coherence, and novelty of generated topics.",
+    "proposed_approach": "Fine-tune LLMs on domain-specific datasets for topic modeling and evaluate the effectiveness of different fine-tuning strategies on topic modeling performance, comparing against state-of-the-art methods such as AHAM, TopicGPT, and BERTopic.",
+    "research_plan": "Evaluate how different fine-tuning strategies affect topic modeling performance by comparing against AHAM, TopicGPT, and BERTopic; no metrics, held-matched comparisons, or failure conditions are specified."
+   }
+  },
+  {
+   "id": "R-09",
+   "part": "A",
+   "A": {
+    "contribution_type": "method",
+    "problem": "Existing LLM agents for autonomous scientific discovery face bottlenecks in generating correct, executable, and reproducible research code. These agents largely rely on reactive debugging from compiler errors or raw execution traces and lack structured internal verification.",
+    "motivation": "Structured internal verification inspired by human cognitive workflows and test-driven development may avoid cascading logic errors and make scientific discovery code more robust end-to-end.",
+    "proposed_approach": "The proposed agentic framework connects natural language research hypotheses to robust code execution by synthesizing automated test cases, verifying a step-by-step plan through simulation prior to code generation, and iterating through hierarchical multi-turn feedback loops. It is applied to scientific code generation tasks.",
+    "research_plan": "The evaluation design applies the framework to scientific code benchmarks and compares it with existing reactive-debugging agents. Claim (1) is assessed by whether cascading logic errors are systematically reduced; claim (2) by whether end-to-end scientific discovery performance improves. The abstract does not specify named baselines, metrics, matching conditions, or failure thresholds."
+   },
+   "B": {
+    "contribution_type": "method (secondary: artifact)",
+    "problem": "Scientific code generation with LLMs is unreliable, suffers from error propagation in multi-agent workflows, and lacks dependable evaluation in domains with ill-defined success metrics.",
+    "motivation": "Automating scientific code generation could reduce manual coding burden, but reliable use requires better coordination and evaluation, and non-coding practitioners need a way to express domain needs without manual prompt engineering.",
+    "proposed_approach": "The proposed platform coordinates three LLM-based agents under a Bayesian framework: a planning agent structures user inputs into actionable plans and adaptive test cases, a code-generating agent produces candidate solutions, and an evaluator agent provides comprehensive feedback. In an adversarial loop, the planning agent iteratively refines test cases to challenge the code-generating agent, while prompt distributions are dynamically updated using Bayesian principles and code quality metrics, including functional correctness, structural alignment, and static analysis. The platform also translates non-expert prompts into domain-specific requirements, bypassing manual prompt engineering for practitioners without coding backgrounds.",
+    "research_plan": "The evidence consists of benchmark evaluations intended to assess robust code generation and error propagation, and testing on a cross-disciplinary Earth Science task against competing models. The abstract does not specify baselines, metrics, ablations, or failure conditions."
+   }
+  },
+  {
+   "id": "D-40",
+   "part": "A",
+   "A": {
+    "contribution_type": "method (secondary: artifact)",
+    "problem": "Current autonomous AI scientist systems rely predominantly on text-based reasoning and language models, leaving rich visual and multimodal data in scientific research underexploited.",
+    "motivation": "Modern scientific research is characterized by visual and multimodal data such as microscopy images, spectroscopy plots, and tabular results; exploiting these data could improve automated hypothesis generation and experimental design.",
+    "proposed_approach": "The proposed framework integrates vision-language models with structured reasoning to automate hypothesis formation and experiment planning from raw scientific data, including microscopy images, spectroscopy plots, and tabular results. The agent architecture grounds textual hypotheses in visual evidence extracted from scientific images. It uses multimodal chain-of-reasoning to design experiments that bridge visual observations and theoretical predictions. An accompanying evaluation benchmark is provided on real biology and materials science research workflows combining vision, text, and domain knowledge.",
+    "research_plan": "The evidence is an evaluation on a curated dataset of real biology and materials science experiments, comparing the proposed multimodal agent against text-only baselines on hypothesis quality and experimental rigor. The benchmark combines vision, text, and domain knowledge across real workflows."
+   },
+   "B": {
+    "contribution_type": "method",
+    "problem": "Autonomous AI agents can generate code and execute experiments but struggle to interpret experimental results and use those results to drive iterative discovery.",
+    "motivation": "Closing the interpretation-to-next-experiment loop would allow autonomous agents to move beyond single experiments and support iterative scientific discovery.",
+    "proposed_approach": "The proposed framework is a multimodal agent system that analyzes scientific results including plots, tables, images, and instrument readouts, then generates both interpretations and follow-up experiments. It reasons over visual and tabular outcomes, proposes data-driven hypotheses, and recommends the next experimental design.",
+    "research_plan": "The system will be evaluated on a benchmark of real multi-step scientific workflows spanning chemistry, biology, and materials science, measuring interpretation accuracy and the scientific soundness of proposed next steps. The benchmark serves as evidence for both the interpretation capability and the quality of follow-up experiment recommendations."
+   }
+  },
+  {
+   "id": "D-36",
+   "part": "A",
+   "A": {
+    "contribution_type": "method",
+    "problem": "Existing AI research agents have been applied to domains with crisp, instrumentable success conditions such as equation discovery, ML benchmarks, fluid mechanics, or text-to-SQL, but not to the soft-target linguistic domain of text readability and simplification, where candidate rewritings need explicit firing preconditions, effect claims, and impossibility conditions.",
+    "motivation": "Applying disciplined hypothesis-discovery machinery to linguistic simplification would make rule discovery systematic and auditable in a domain that lacks such machinery, offering a way to recover teachable rewriting rules beyond what existing search methods find.",
+    "proposed_approach": "The agent mines complex/simple parallel corpora to generate candidate rewriting rules, including clause splitting, passive-to-active conversion, nominalization-to-verbalization, rare-term substitution, and conjunction deletion. Each rule is validated by controlled contrastive experiments on the same passage with and without the rule, scored on readability formulae, cloze comprehension, and meaning-preservation alignment; judgment disagreements are escalated to budgeted clause-level human evaluation. A rule is accepted only when readability gain, meaning preservation, human approval, and an empty impossibility scan all hold jointly, and accepted rules are merged by locality-sensitive equivalence into a minimal, interpretable ruleset.",
+    "research_plan": "(1) The core claim is tested with a hidden planted rule-bank recovery benchmark that measures whether disciplined search recovers planted rules that zero-shot prompting, unguided ranking-based agents, Nova-style retrieval-enriched idea search, and Self-Refine-style one-agent loops miss. (2) Per-rule support is the controlled contrastive experiment on the same passage with and without the rule, scored on readability formulae, cloze comprehension, and meaning-preservation alignment, with disagreements escalated to budgeted clause-level human evaluation. (3) Support also requires all four acceptance conditions to hold jointly; failure is indicated if baselines recover the same or more planted rules or if accepted rules fail any condition."
+   },
+   "B": {
+    "contribution_type": "method (secondary: artifact)",
+    "problem": "Existing automated scientific-discovery pipelines for vision-language models can mine behaviors and propose hypotheses but do not close the loop into adversarial-audited testware, and they are prone to benchmark selection, data leakage, metric misuse, and post-hoc selection hazards.",
+    "motivation": "Closing the loop would let a frozen vision-language model be probed continuously and yield novel, expert-validated test items and programmatic evaluators at higher discovery per compute-hour than manual or agent-assisted search, while preventing systemic hazards of automated science.",
+    "proposed_approach": "Given a frozen target vision-language model, an input corpus, and multimodal generation/analysis tools, the proposed agent mines the target's behavior on adaptively chosen inputs, proposes falsifiable hypotheses about that behavior, and per accepted hypothesis synthesizes new test items plus a programmatic evaluator whose ground truth is created as part of the test via one of three oracle modes: an engineered verifier, cross-model consensus, or adversarial counterfeiting of spurious-feature items. It then runs an internal adversary that attempts to break each candidate suite given only its hypothesis, and an integrity auditor that enforces, at the granularity of individual items, the four failure modes benchmark selection, data leakage, metric misuse, and post-hoc selection. The deliverable includes the system and a provenance-complete corpus of discovered, adversarial-audited vision-language-model behavior tests.",
+    "research_plan": "The discovery-yield claim is evaluated by expert-validated discovery yield per compute-hour against an equal-budget agent-assisted human search; it is falsified if most exported items fail expert re-review. The auditor is evaluated by recall on planted faults and fails if it does not beat a static checklist. Downstream utility is evaluated when discovered items re-enter evaluation of other vision-language models, compared against human-written suites and ablative agent variants."
+   }
+  },
+  {
+   "id": "R-01",
+   "part": "A",
+   "A": {
+    "contribution_type": "method",
+    "problem": "Automating open-ended scientific discovery currently lacks systems that both generate hypotheses or empirical laws and guarantee their rigorous logical consistency: existing approaches either perform unverified symbolic regression and theory formation, risking hallucinated or unsound rules, or focus exclusively on proving pre-existing human-curated theorems in formal proof assistants.",
+    "motivation": "Reliable open-ended discovery matters because unverified AI scientist frameworks can propagate spurious conjectures, while formal scientific domains demand machine-checked guarantees for newly discovered laws. Interactive proof assistants such as Lean 4 now make it possible to turn proof failures into semantic feedback for refining inductive hypotheses.",
+    "proposed_approach": "The proposed framework operates as a three-stage closed loop. First, an inductive concept and conjecture generator proposes structural definitions and empirical invariants in targeted scientific domains. Second, a theory exploration module formulates mutually consistent lemma candidates using automated term generation and testing. Third, an interactive theorem-proving agent backed by Lean 4 attempts to formally verify or refute the discovered theories; proof failures are fed back as semantic feedback to refine inductive hypotheses, and every accepted law or theory receives a machine-verified proof certificate.",
+    "research_plan": "The paper outlines an experimental agenda across formal scientific domains to test whether the framework discovers novel, non-trivial, and formally verified propositions and eliminates spurious conjectures; no specific baselines, metrics, or failure conditions are stated in the abstract."
+   },
+   "B": {
+    "contribution_type": "method",
+    "problem": "Scientific AI systems can generate hypotheses and explanations, but many optimize plausibility more than refutability, leaving hypotheses without systematic adversarial testing or machine-checkable proof.",
+    "motivation": "Making discovery depend on disciplined claim survival rather than fluent claim production could reduce false hypotheses and increase the reliability of machine-generated scientific knowledge.",
+    "proposed_approach": "The proposed architecture coordinates specialized agents that propose hypotheses, build causal models, design adversarial tests, and verify formal claims. These agents operate over a persistent shared memory that records assumptions, counterexamples, interventions, and proof obligations. Failed predictions and invalid proof attempts are treated as learning signals to refine hypotheses rather than being ignored.",
+    "research_plan": "The paper evaluates the framework on simulated discovery tasks using verified discovery rate and false-positive hypothesis retention as evidence for the effectiveness claim. Scaling experiments vary the number of agents and track a discovery quality factor to test the scaling claim. The abstract does not name explicit baselines or failure conditions, though support and failure would turn on the verified discovery and false-positive retention metrics."
+   }
+  },
+  {
+   "id": "R-10",
+   "part": "A",
+   "A": {
+    "contribution_type": "method",
+    "problem": "Automated research systems for causal empirical analysis are prone to silent failures, in which analysis code runs successfully but relies on invalid causal assumptions, and these failures are not made visible.",
+    "motivation": "Making these failures visible would prevent unwarranted causal claims and support validity-first automated science, while synthetic-data generation can also enable pipeline development when confidential data are inaccessible.",
+    "proposed_approach": "The framework translates natural language research questions into structured causal protocols and executable analysis code. It first constructs a protocol, then generates synthetic datasets using structural causal models with known ground-truth effects; this synthetic-data step can also support pipeline development when access to confidential data is restricted. The generated analysis is then evaluated under controlled violations of identification assumptions. The pipeline explicitly encodes causal design principles, study-specific assumptions, and methodological constraints.",
+    "research_plan": "(1) The framework is evaluated on the Automated Causal Reasoning Benchmark, assessing recovery of identification strategies, causal quantities, treatment and outcome variables, and consistency between generated code and the approved protocol. (2) The contribution of protocol construction and adversarial validation is isolated by comparing the full framework against standard LLM-based generation. Support for the main claim is indicated by a shift from silent causal estimates to surfaced protocol concerns, diagnostic failures, incomplete inference, or non-causal interpretations; failure would be continued silent invalid causal estimates."
+   },
+   "B": {
+    "contribution_type": "artifact (secondary: method)",
+    "problem": "Existing benchmarks for AI research agents measure whether agents reproduce results, complete implementation scaffolds, raise a predictive metric, or produce a coherent paper, but not whether the study design an agent chooses and executes licenses the causal claim it states. In healthcare and education, an intervention claim is only as good as the comparison behind it, yet an implementation-competent agent can report a confounded before-after difference as a causal effect.",
+    "motivation": "Converting the scientific rigor of the study an agent actually runs into a measurable, falsifiable property is consequential in health and education settings, and evidence that language agents inherit human causal-reasoning biases and that end-to-end research agents frequently emit invalidated results makes this urgent and tractable.",
+    "proposed_approach": "The proposed benchmark presents an agent with an intervention-outcome question, a budget, and access to an oracle simulator. The simulator's data-generating process is a structural causal model calibrated to health and education settings; the true effect and hidden confounders are known to the builder but not the agent. The agent must design the study, collect data, analyze it, and issue a conclusion. Scoring centers on the claim-design pair using design bias relative to known ground truth, an over-claim rate, and uncertainty calibration; a claim-time identifiability verifier is introduced as a mechanistic fix during agent decision-making.",
+    "research_plan": "The benchmark evidence is the scored claim-design pair: design bias relative to the oracle's known ground-truth effect, over-claim rate, and uncertainty calibration. The claim-time identifiability verifier is evaluated by comparing the over-claim rate for agents with the verifier against matched agents without it."
+   }
+  },
+  {
+   "id": "D-32",
+   "part": "A",
+   "A": {
+    "contribution_type": "method (secondary: artifact)",
+    "problem": "Current AI scientist systems can execute individual experimental steps but lack principled mechanisms for analyzing unexpected results and systematically diagnosing root causes when experiments underperform.",
+    "motivation": "Principled diagnosis and targeted follow-up experiments could replace random hyperparameter search or uniform re-runs, reducing wasted effort and enabling agents to converge on correct implementations more efficiently.",
+    "proposed_approach": "The work builds a framework in which, after an underperforming primary experiment, an AI agent analyzes results, forms hypotheses about the cause of failure, proposes and executes minimal targeted experiments to disambiguate among failure modes, and uses the diagnosis to guide the next full experiment design. It contributes a formalism for failure diagnosis, a benchmark of research tasks with instrumented failure modes, and an agent architecture integrating result analysis, hypothesis formation, diagnostic experiment proposal, and adaptive planning.",
+    "research_plan": "Evidence focuses on two claims: (1) the framework's ability to isolate failure modes is tested on a benchmark of research tasks with instrumented failure modes; (2) the improvement over baselines is tested by comparing the agent against baseline refinement strategies and current state-of-the-art agents on convergence to correct implementations and end-to-end experimental success across 200+ synthetic and real tasks. Support would show higher convergence and success relative to baselines; failure would show no improvement or failure to identify root causes."
+   },
+   "B": {
+    "contribution_type": "method",
+    "problem": "Autonomous AI research agents often fail at complete end-to-end experiments even when they perform strongly on subtasks, and although recent work can detect and diagnose failures in multi-agent systems, there is no systematic framework for adaptively redesigning experiments after a failure occurs.",
+    "motivation": "Making agents able to recover from failed experiments by refining experimental designs would reduce wasted compute and move autonomous research from strong subtask performance toward reliable end-to-end experimentation.",
+    "proposed_approach": "The framework has agents decompose experimental hypotheses into mechanistic elements, diagnose failure modes, and iteratively refine experimental designs based on failure feedback. A structured mapping from observed failure modes to design modifications distinguishes implementation bugs, methodological flaws, and invalid assumptions, and uses the diagnosis to prioritize refinement actions: parameter adjustment, control addition, and mechanism specification. The framework is implemented and evaluated on a benchmark of failure-prone experimental scenarios across domains.",
+    "research_plan": "The paper evaluates the framework on a benchmark of failure-prone experimental scenarios across domains, using retry success rate and number of iterations to a valid design as evidence, compared against naive re-execution and baseline methods. Support would be higher retry success and faster convergence than baselines; failure would be no improvement over naive re-execution."
+   }
+  },
+  {
+   "id": "D-37",
+   "part": "A",
+   "A": {
+    "contribution_type": "method",
+    "problem": "Current automated scientific discovery systems struggle to independently generate novel, falsifiable, and experimentally actionable hypotheses; existing MCTS- or multi-agent LLM-based ideation approaches often suffer from coarse-grained formulations, subjective interestingness proxies, or unconstrained combinatorial explosion in vast hypothesis spaces.",
+    "motivation": "More principled and tractable hypothesis generation would make automated scientific discovery more reliable by avoiding subjective proxies and uncontrolled search blow-up.",
+    "proposed_approach": "The proposed framework maintains an explicit causal graph representation of the scientific domain. Tree search is guided by maximizing Bayesian surprise, defined as the epistemic shift between agents' prior beliefs and posterior evaluations after simulated experimental feedback. A multi-agent committee acts as the transition and reward model, iteratively proposing, critiquing, and refining fine-grained experimental parameters along search paths.",
+    "research_plan": "The claimed improvements are evaluated by comparing the proposed framework against heuristic and single-agent search baselines on benchmark datasets, measuring hypothesis novelty, factual alignment, and expert-rated plausibility. The abstract does not describe ablations, matched compute budgets, or explicit failure conditions."
+   },
+   "B": {
+    "contribution_type": "method",
+    "problem": "Existing LLM-based scientific hypothesis generation frameworks rely on correlational associations, forward-chaining heuristics, or unstructured retrieval and are prone to unverified confounding, logical leaps, and hallucinations; causal discovery methods integrated with LLMs focus on recovering historical or observational graphs rather than actively stress-testing prospective novel hypotheses.",
+    "motivation": "LLMs are increasingly deployed as autonomous agents for scientific discovery, particularly hypothesis generation, making it important to ground generated hypotheses in causal structure and robustness checks rather than correlation.",
+    "proposed_approach": "An autonomous multi-agent framework extracts claims from retrieved literature to form a directed causal graph, identifies vulnerable assumptions or unobserved confounders in newly generated hypotheses, and executes adversarial counterfactual queries to evaluate robustness; this anchors hypothesis generation in dynamically constructed causal dependency graphs and refines them through iterative counterfactual probing.",
+    "research_plan": "Comparative experiments are conducted on multi-domain scientific benchmarks, evaluating hypothesis validity, novelty, and causal consistency against standard LLM reasoning and baseline graph-augmented frameworks. No explicit failure condition or matched-compute specification is stated."
+   }
+  },
+  {
+   "id": "R-15",
+   "part": "A",
+   "A": {
+    "contribution_type": "method",
+    "problem": "Most current LLM-based symbolic regression methods are passive: they evaluate fixed, static datasets rather than choosing which experiments to run next.",
+    "motivation": "Actively selecting informative experiments, as human scientists do, could reduce the number of experiments needed to discover interpretable equations and help disambiguate competing hypotheses.",
+    "proposed_approach": "The proposed LLM-based autonomous agent maintains a population of candidate equations, computes information gain and expected model disagreement to identify the next most informative experiment, and iteratively refines hypotheses through a closed feedback loop. It actively proposes which experiment to run next instead of evaluating a fixed dataset.",
+    "research_plan": "On synthetic symbolic regression benchmarks, the agent is compared with passive baselines; the evidence is whether it recovers ground-truth equations with fewer experiments and high symbolic accuracy. A failure would be no reduction in experiments or a drop in accuracy relative to passive baselines."
+   },
+   "B": {
+    "contribution_type": "method",
+    "problem": "Existing approaches recover governing ordinary differential equations as a static inference problem over fixed datasets, assuming observed trajectories are sufficiently informative; when data are limited, multiple equations can be observationally indistinguishable, creating identifiability gaps and incorrect recovered equations.",
+    "motivation": "Adaptive data acquisition can resolve observational indistinguishability, and large language models make tractable priors over large equation spaces, enabling correct recovery from limited and noisy data.",
+    "proposed_approach": "The proposed closed-loop framework jointly optimizes symbolic hypothesis construction and adaptive data acquisition. A large language model proposes operator priors that partition the large search space into distinct regions, and candidate equations within each region are fit to observed data. Disagreement among the candidates guides acquisition of informative trajectories, forming a feedback loop that iteratively refines both the hypothesis space and the discovered dynamics.",
+    "research_plan": "Evidence for claim (1) comes from evaluation on 122 ODE systems spanning ODEBench and ODEBase, using median NMSE and symbolic accuracy against state-of-the-art baselines. Claim (2) is assessed through sample-efficiency analysis comparing performance under reduced data fractions. Claim (3) is tested by noise-robustness analysis and comparison of recovered symbolic structures, checking for spurious terms relative to baselines."
+   }
+  },
+  {
+   "id": "R-08",
+   "part": "A",
+   "A": {
+    "contribution_type": "method",
+    "problem": "Current LLM-based scientific agents face limitations in iterative hypothesis refinement and experimental design.",
+    "motivation": "Improving the efficiency and effectiveness of LLM-based scientific agents would promote accelerated scientific discovery across diverse domains.",
+    "proposed_approach": "A feedback-driven multi-agent system for LLM-based scientific agents that integrates a feedback loop to support iterative hypothesis refinement and experimental design.",
+    "research_plan": "The system will be evaluated on the BoxingGym benchmark, focusing on experimental design and model discovery; the abstract does not specify baselines, metrics, or failure conditions."
+   },
+   "B": {
+    "contribution_type": "method (secondary: artifact, empirical_analysis)",
+    "problem": "Current autonomous scientific research systems, even those using large language models and agentic architectures, are constrained by fixed workflows and toolsets that prevent adaptation to evolving tasks and environments.",
+    "motivation": "Adaptation to evolving tasks and environments is needed to automate a broad range of computationally accessible scientific tasks; dynamic tool discovery and experimental feedback make such adaptation tractable, and an open-source platform can support community-driven development.",
+    "proposed_approach": "The framework automatically synthesizes task-specific multi-agent workflows and iteratively refines them through experimental feedback. A meta-orchestrator generates workflow topologies, and code-generating agents execute subtasks by invoking tools and scientific software libraries discovered through the Model Context Protocol. An LLM-based judge scores executions, and the resulting feedback drives workflow refinement. The system is released as an open-source platform with fully logged execution traces and archived workflows to support auditability.",
+    "research_plan": "Evidence: (1) evaluation on ScienceAgentBench using DeepSeek-V3.2, with success rate compared against single-agent baselines and static multi-agent configurations; (2) analysis of heterogeneous model responses to multi-agent decomposition and iterative learning; (3) open-source release with modular, tool-agnostic design and logged execution traces/archived workflows as evidence for extensibility and auditability. No explicit failure conditions or matched-budget details are stated."
+   }
+  },
+  {
+   "id": "D-30",
+   "part": "A",
+   "A": {
+    "contribution_type": "method",
+    "problem": "Existing multi-agent LLM systems for scientific discovery suffer from unconstrained confirmation bias, generating superficially plausible but empirically unsound or hallucinatory hypotheses, while adversarial approaches focus on rhetorical persuasiveness to fool reviewers rather than grounding ideas in empirical verifiability.",
+    "motivation": "Grounding adversarial hypothesis generation in automated empirical execution can turn falsification attempts into actionable feedback, making scientific theories more rigorous, testable, and reproducible.",
+    "proposed_approach": "The framework uses a population of hypothesis generator agents and critic/falsification agents in an adversarial co-evolutionary loop. Critics' falsification attempts are routed into automated empirical execution loops such as code sandboxes, simulation environments, and formal verification tools, yielding structured environmental feedback. Generator agents are updated from this feedback to produce hypotheses that are testable, reproducible, and empirically grounded rather than rhetorically persuasive.",
+    "research_plan": "Evidence is comparative evaluation on interactive scientific benchmarking suites, with the proposed framework compared against non-adversarial and purely rhetorical baselines. The metrics used are hypothesis falsification resistance, empirical reproducibility, and uncertainty reduction. The abstract does not state failure conditions or what is held matched across baselines."
+   },
+   "B": {
+    "contribution_type": "method",
+    "problem": "Existing multi-agent scientific ideation frameworks predominantly rely on cooperative or positive synthesis, causing confirmation bias and insufficient critical stress-testing that yield ungrounded or easily refutable hypotheses. Although post-hoc hypothesis validation and inference-time adversarial adjustments have been explored separately, active adversarial refutation integrated with co-evolutionary generator-critic feedback during ideation remains underexplored.",
+    "motivation": "LLM agents have demonstrated capabilities in automating scientific ideation and hypothesis generation, making it timely to address their confirmation-bias limitations.",
+    "proposed_approach": "A multi-agent framework frames scientific ideation as a co-evolutionary game between a Hypothesis Generator and an Adversarial Falsifier. The Falsifier actively constructs empirical counter-arguments and simulated refutation plans targeting logical and empirical gaps in current hypotheses, and the Generator adapts its parametric knowledge using this adversarial feedback at inference time.",
+    "research_plan": "Experiments across benchmark scientific environments compare the proposed framework against standard collaborative and purely affirmative multi-agent baselines, evaluating downstream robustness, empirical viability, and novelty of generated hypotheses. The abstract does not state a specific failure condition or matched settings."
+   }
+  },
+  {
+   "id": "R-16",
+   "part": "A",
+   "A": {
+    "contribution_type": "method (secondary: artifact)",
+    "problem": "In autonomous self-driving laboratories, LLM agents can plan and run chemistry experiments, but their plans frequently violate a posteriori unknown feasibility constraints, and they rarely recover from hardware faults without hand-written scripts.",
+    "motivation": "Reliable autonomous operation is needed for droplet-microfluidic catalyst screening, where feasibility grounding and failure-tolerant replanning would reduce human intervention and hardware risk.",
+    "proposed_approach": "The proposed framework uses a hierarchical LLM agent to generate hypotheses and experimental plans. Before any hardware command, a structured feasibility validator checks each plan against a device-specific constraint knowledge base covering pressure envelopes, flow-rate bounds, reagent/solvent compatibility, solubility windows, and stability limits, while an LLM-driven constraint regularizer grounds that knowledge base in curated wet-lab microfluidic literature. A failure-diagnosis module maps measured sensor signatures from flow, pressure, droplet-size distribution, and optical readouts onto a causal failure graph covering clogging, coalescence, bubbles, drying, and phase separation, identifies the most plausible fault with evidence and confidence, and triggers automated replanning from a structured corrective-action library; a machine-checkable policy governs confirmation, failure recovery, escalation, and stopping, escalating persistent uncertainty or safety interlocks to a human operator. The deliverable includes a reusable, openly published fault-injection benchmark suite for microfluidic catalyst discovery.",
+    "research_plan": "The framework is evaluated on a droplet-microfluidic catalyst-screening testbed spanning a catalyst × condition matrix with in situ optical readout. Fault tolerance is tested under a fault-injection benchmark of 20 seeded, physically real faults: clogging, wrong-reagent injection, phase separation, drying, and out-of-envelope setups. It is compared against three baselines: an AlphaFlow-style RL planner, a DMFAs-style unconstrained LLM tool-harness planner with and without domain-specialized tools, and a passive hardware-monitor. Success is defined as at least 70% autonomous fault recovery, zero out-of-envelope commands, and at least 0.9× the feasible-region sample efficiency of the BO-style baseline; these thresholds serve as failure conditions for the corresponding claims."
+   },
+   "B": {
+    "contribution_type": "artifact",
+    "problem": "Electronic materials characterization is split between industry-scale automated systems offering high throughput but limited flexibility and highly customized, expert-driven systems offering research-grade discovery but limited bandwidth, leaving a gap for approaches that combine both.",
+    "motivation": "Recent hardware APIs and AI integration make it possible to bridge these two regimes, enabling research-grade characterization at higher throughput and allowing both human and AI agents to operate heterogeneous instruments.",
+    "proposed_approach": "The proposed platform is a custom-built characterization system for the agentic-AI era that provides unified control of scanning probe microscopes and programmable peripheral instrumentation. It is built around application program interfaces that control hardware and integrates AI methods to incorporate autonomy. Its design choices aim to maximize system capability and ease of use for both human and AI agents, making heterogeneous scientific instruments accessible, composable, and usable by agents.",
+    "research_plan": "The benefits are demonstrated by test cases involving the platform's use with heterogeneous scientific instruments; the abstract does not state baselines, metrics, or failure conditions, and does not specify which claim each test case supports."
+   }
+  },
+  {
+   "id": "R-06",
+   "part": "A",
+   "A": {
+    "contribution_type": "method",
+    "problem": "Autonomous \"AI scientist\" systems improve an existing code baseline by iteratively refining a single favored method family until a compute or time budget runs out, and independent evaluations find stalled ideas that are never abandoned, post-hoc reinterpretation of negative results, and fabricated or unverifiable experiment narratives; there is no decision layer that forces competing hypotheses to make pre-registered predictions and supports principled abandonment.",
+    "motivation": "Without such a layer, autonomous research agents waste experiment budget on stalled method families and produce untrustworthy or unverifiable narratives; adding hard pre-registration, auditable budget allocation, and statistically grounded abandonment would reduce wasted experiments and make agent-driven research decisions more auditable.",
+    "proposed_approach": "The proposed decision-making layer has an AI research agent maintain a small portfolio of competing mechanism-level hypotheses, and forces each hypothesis to commit a pre-registered quantitative prediction before every experiment. It then runs a budgeted race in which experiments are allocated to the hypotheses whose disagreement they best resolve. A hypothesis family is permanently archived once its pre-registered predictions are statistically dominated by a rival.",
+    "research_plan": "The evidence is two-layered. (1) A synthetic suite with known ground truth measures experiments-to-convergence, budget wasted on the plateau family, and kill/keep accuracy; this bears on both the efficiency and archive-decision claims. (2) A subset of execution-grounded research-agent tasks first isolates decisions under a pre-verified execution oracle and then probes them with a real coding agent, testing whether the decision behavior transfers. The comparison is held to a fixed experiment budget; support requires fewer experiments to target than single-thread refinement and better ground-truth recovery than the LLM judge."
+   },
+   "B": {
+    "contribution_type": "method (secondary: empirical_analysis)",
+    "problem": "Autonomous research loops driven by large language models can run machine-learning experiments at scale but tend to drift toward local refinements of whichever metric they optimise rather than testing the hypotheses that motivate the experiments.",
+    "motivation": "Structural safeguards are needed to keep autonomous research scientifically honest as it scales, and a separate taste oracle could direct exploration without contaminating the epistemic loop.",
+    "proposed_approach": "An autonomous research loop for studying generalisation in quadruped robot navigation policies is built on an existing autonomous research paradigm. It adds an immutable experiment card that records each iteration's prediction and outcome under a fixed schema, specialised subagents restricted to mechanical roles, and a preference oracle that encodes the user's research taste as a typed knowledge graph and is the only component allowed subjective judgements. To isolate the oracle, the identical loop is run twice across eleven research streams, once with and once without the preference oracle.",
+    "research_plan": "The evaluation isolates the preference oracle by running the identical scaffold across eleven research streams in two arms: with and without the oracle. Drift is assessed by whether each arm retcons falsified hypotheses or merely refines its optimised metric, using the fixed experiment-card schema as the instrument. The oracle's effect is assessed on direction rather than score: which arm explores test-time adaptation, which arm authors winning designs where it led, and whether lessons carry across streams. The scaffold's honesty claim would fail if either arm drifted from hypothesis testing despite metric optimisation. Policy quality is compared as a secondary axis while holding the loop scaffold fixed."
+   }
+  },
+  {
+   "id": "D-29",
+   "part": "A",
+   "A": {
+    "contribution_type": "method",
+    "problem": "Current AI Scientist systems apply fixed research workflows across diverse scientific domains, despite evidence that different problem types benefit from fundamentally different discovery approaches.",
+    "motivation": "Reducing unnecessary experiment failures and accelerating convergence to publishable results would make AI-driven scientific discovery more efficient.",
+    "proposed_approach": "The framework classifies incoming scientific problems by structural characteristics such as discrete vs. continuous optimization and data-driven vs. first-principles reasoning. It learns which research methodologies, including hypothesis generation strategies, experiment design patterns, and validation protocols, are most effective for each problem class based on historical outcomes. It then dynamically adapts or selects research workflows for each problem to maximize discovery efficiency and reduce failure rates.",
+    "research_plan": "The framework is evaluated on a benchmark of research tasks spanning materials discovery, algorithm design, and equation discovery, comparing domain-aware methodology selection against fixed-workflow baselines. The stated evidence conditions are experiment failure rates and convergence to publishable results; no matched compute/parameter controls, ablations, or explicit failure condition are described."
+   },
+   "B": {
+    "contribution_type": "method (secondary: artifact)",
+    "problem": "Current AI scientist systems generalize poorly across structurally different research problems, and available benchmarks either test general task automation rather than research-specific reasoning or remain confined to machine learning.",
+    "motivation": "Enabling AI agents to recognize domain novelty and compose appropriate workflows could extend automated scientific reasoning across disciplines instead of requiring fixed pipelines per domain.",
+    "proposed_approach": "The proposed agent architecture detects the novelty of a research task's domain and dynamically selects or composes domain-appropriate workflows rather than running a fixed end-to-end pipeline. A lightweight task-structure classifier decides whether a problem fits learned domain patterns or represents a novel research paradigm, and a modular planner-executor hierarchy composes hypothesis generation, experimental design, and analysis modules accordingly. The system is evaluated on a newly introduced benchmark spanning six scientific domains with explicit cross-domain generalization splits.",
+    "research_plan": "(1) The claim that adaptive workflow selection improves generalization is tested on a new benchmark spanning six scientific domains with explicit cross-domain generalization splits, comparing the proposed architecture against fixed-pipeline baselines. (2) The claim that agents can handle domains absent from training is tested by evaluating on benchmark domains not seen during training. The abstract does not state ablations or matched compute/training budgets, nor an explicit failure condition beyond fixed-pipeline comparison."
+   }
+  },
+  {
+   "id": "R-13",
+   "part": "A",
+   "A": {
+    "contribution_type": "method",
+    "problem": "Existing AI methods, especially large language models, support individual tasks like hypothesis generation and experimental design but do not reproduce the collaborative, team-based way in which diverse experts jointly address complex scientific problems.",
+    "motivation": "Accelerating scientific discovery requires tools that can emulate collaborative expert teamwork, not only individual reasoning.",
+    "proposed_approach": "An enhanced LLM-based multi-agent system that gives the agents a time-varying knowledge exchange mechanism and a review process with two separate diversity criteria; it is intended to emulate collaborative scientific teamwork for idea generation.",
+    "research_plan": "The paper reports comprehensive experiments comparing the proposed system with state-of-the-art methods, using novelty of generated scientific ideas as the evaluation target."
+   },
+   "B": {
+    "contribution_type": "method",
+    "problem": "Many existing AI scientist systems rely on rigid interaction protocols and coarse-grained novelty tests, which impede long-term creative exploration in autonomous scientific ideation.",
+    "motivation": "Massive language models show promise for autonomous scientific ideation, so more flexible multi-agent collaboration and finer-grained novelty assessment may unlock long-term creative exploration.",
+    "proposed_approach": "The proposed framework organizes multiple agents into rotating conversation groups using a World Café-style collaborative structure. A multi-strategy turn-taking scheduler distributes speaking turns adaptively based on relevance, participation balance, and self-reported willingness. Novelty assessment incorporates a finer-grained idea novelty metric for more detailed evaluation.",
+    "research_plan": "Evaluation compares the framework against single-agent and multi-agent baselines using a total novelty measure, under regulated discussion cost conditions and using public academic knowledge graphs. The design also includes component-level assessment of the turn-taking scheduler and the novelty metric's effect on creative performance. No explicit failure condition or matched compute/parameter controls are stated."
+   }
+  },
+  {
+   "id": "D-28",
+   "part": "A",
+   "A": {
+    "contribution_type": "method (secondary: position)",
+    "problem": "Current LLM-based discovery agents generate, fit, and rank hypotheses but rarely treat the choice of an experiment that most cheaply separates live rival explanations as a first-class decision, underusing the places where their own competing models disagree.",
+    "motivation": "Newly available interactive-discovery environments make this discrimination problem measurable and tractable, while existing evidence that current LLM agents are weak at experiment design and do not improve merely by adding explicit statistical models suggests an unaddressed capability bottleneck.",
+    "proposed_approach": "The proposed framework operates as an agentic loop over an explicit executable set of rival hypotheses. At each step it renders each surviving hypothesis as code carrying an explicit noise model, proposes an intervention, scores it by a cost-normalized divergence measure quantifying how much simulated outcomes would separate the rivals, runs the best intervention, and eliminates hypotheses whose outcome it refutes. The proposal specifies the protocol, the divergence-score estimator, a benchmark crossing four environments, four ablations, and success and error metrics.",
+    "research_plan": "The proposal evaluates the framework on newly available interactive-discovery environments, including BoxingGym and PhysGym, against otherwise-equivalent agents pursuing fit, novelty, validation, or statistical-model augmentation without discrimination planning. Success for the first claim is identifying the true underlying model in fewer experiments than those baselines; success for the second is achieving controlled false-elimination error. The benchmark crosses four environments and four ablations to isolate components of the divergence-driven selection loop, with specified success and error metrics. Failure would occur if the framework does not reduce the number of experiments or does not control false-elimination error relative to the otherwise-equivalent agents; the comparison design holds agents otherwise equivalent and manipulates only the discrimination-planning mechanism."
+   },
+   "B": {
+    "contribution_type": "method",
+    "problem": "In closed-loop LLM-based scientific discovery, the same underlying model typically proposes hypotheses, chooses experiments, and revises them, so the selector of evidence is also the advocate of the hypothesis; this coupling may create a confirmation bias in which experiments probe regions the favored hypothesis predicts rather than regions where rival hypotheses disagree, wasting budget and leaving false models unrefuted.",
+    "motivation": "Because LLM agents are increasingly used for autonomous scientific discovery, removing self-induced confirmation bias would make limited experiment budgets more informative and reduce the risk of false models surviving.",
+    "proposed_approach": "The intervention splits the closed-loop discovery loop into two roles. One set of components generates and maintains an explicit ensemble of rival executable hypotheses. A separate experiment-selection component, which is never told which hypothesis is currently favored, chooses each experiment to maximize expected discrimination across the whole ensemble. This structurally decouples experiment choice from the current favorite, making the chosen experiment accountable to all live hypotheses rather than only the favored one.",
+    "research_plan": "The claim is evaluated at a fixed experiment budget in interactive environments with hidden ground truth, including the paper's enumerable micro-environments and two gym-style environments. The proposed decoupled system is compared against self-selecting agents, single-model expected-information-gain agents, impartiality-prompted agents, and falsifier-of-the-favorite agents on recovery of the true model, number of experiments to convergence, and a confirmatory-bias metric. Support requires the decoupled system to recover the true model more often, converge with fewer experiments, and show lower confirmatory bias than the baselines at the same budget; absence of these differences would falsify the claim."
+   }
+  },
+  {
+   "id": "D-34",
+   "part": "A",
+   "A": {
+    "contribution_type": "method",
+    "problem": "The potential of fine-tuned LLMs for hypothesis generation and experimental design in chemistry and material science remains unexplored in real-world applications, and no framework exists for their systematic use in scientific discovery.",
+    "motivation": "LLMs have shown promise in automating stages of scientific research, including hypothesis generation and experimental design; extending this to chemistry and material science could advance scientific discovery.",
+    "proposed_approach": "Apply fine-tuned LLMs to chemistry and material science to generate novel hypotheses and experimental designs; assess their performance in real-world applications; identify strengths and limitations; and use the assessment to propose a framework for their systematic use in scientific discovery.",
+    "research_plan": "Assess the performance of fine-tuned LLMs in real-world chemistry and material science applications; the assessment is intended to identify strengths and limitations and to support a proposed framework for systematic use. No baselines, metrics, or failure conditions are specified in the abstract."
+   },
+   "B": {
+    "contribution_type": "method",
+    "problem": "Hypothesis generation and experimental design in materials science currently rely on manual literature analysis and are limited in efficiency and innovation.",
+    "motivation": "Rapid advances in large language models make it newly possible to analyze large volumes of literature and automate the generation of research questions and experimental designs, potentially transforming materials discovery.",
+    "proposed_approach": "A framework is developed that uses fine-tuned large language models to generate scientific hypotheses and experimental designs in materials science. The approach analyzes existing literature to identify knowledge gaps and propose research questions and methodologies. A dataset of materials science papers is created and used to fine-tune the models. The generated hypotheses and designs are then evaluated for quality.",
+    "research_plan": "The plan is to create a dataset of materials science papers, fine-tune the models on it, and evaluate the quality of the generated hypotheses and experimental designs. The quality evaluation is intended as evidence for the claim that fine-tuned LLMs can produce useful research directions; no baselines, metrics, or failure conditions are specified."
+   }
+  },
+  {
+   "id": "R-19",
+   "part": "A",
+   "A": {
+    "contribution_type": "method",
+    "problem": "Generating high-quality hypotheses in scientific research is challenging and time-consuming, and current LLM-based approaches show promise but can be further improved in effectiveness.",
+    "motivation": "Automating hypothesis generation could reduce the time and effort required for scientific research; recent advances in LLMs make this tractable, and evolutionary algorithms are well-suited for exploring complex search spaces and optimizing solutions.",
+    "proposed_approach": "The proposed work develops a framework that integrates LLMs with evolutionary algorithms to automate and optimize hypothesis generation. The evolutionary algorithm component is used to explore complex search spaces and optimize candidate solutions, while LLMs support hypothesis generation.",
+    "research_plan": "The framework will be evaluated across various scientific domains to assess performance, efficiency, and innovation. No baselines, metrics, or failure conditions are specified, and no matched controls or ablations are described."
+   },
+   "B": {
+    "contribution_type": "method",
+    "problem": "Existing LLM-assisted approaches to scientific idea generation exhibit semantic convergence, which limits the diversity and novelty of generated research ideas.",
+    "motivation": "As LLMs show promise in assisting idea generation, overcoming semantic convergence is valuable for broadening the candidate ideas and advancing scientific progress.",
+    "proposed_approach": "The proposed framework recasts scientific idea generation as an evolutionary search over a population of ideas. It iteratively applies rank-based mutation with differentiated retrieval planning to incorporate external knowledge, and semantic-aware crossover to fuse complementary concepts for conceptual reorganization. A lightweight evaluation signal guides selection, encouraging sustained exploration while mitigating premature convergence.",
+    "research_plan": "The evidence is extensive experiments comparing the proposed framework to state-of-the-art baselines on novelty, diversity, and idea quality under the current automatic evaluation protocol. Claims about enhanced exploration and maintained quality are supported by these comparisons; no explicit failure condition is stated in the abstract."
+   }
+  },
+  {
+   "id": "R-11",
+   "part": "A",
+   "A": {
+    "contribution_type": "artifact (secondary: empirical_analysis)",
+    "problem": "LLM agents increasingly perform end-to-end ML engineering tasks where success is judged by a single scalar test metric; this creates a structural vulnerability in which an agent can increase the reported score by compromising the evaluation pipeline rather than improving the model.",
+    "motivation": "If scores can be raised by compromising evaluation, progress signals become unreliable, so evaluation integrity must be made explicit and measurable rather than assumed.",
+    "proposed_approach": "The proposed benchmark runs each episode in a fresh workspace with patch tracking and runtime file-access logging. It makes two compromise vectors explicit: evaluator tampering (modifying metric computation or reporting) and train/test leakage (accessing held-out data or labels during training). Detectors compare the agent-reported metric to a trusted reference to assign auditable integrity labels.",
+    "research_plan": "(1) For the benchmark's detection claim, episodes run in fresh workspaces with patch tracking and runtime file-access logging, and detectors compare agent-reported metrics to a trusted reference. (2) Scripted attack runs exercise both compromise vectors in fully mutable workspaces. (3) Single-mechanism defenses are tested separately on each vector, and a combined defense regime is tested against both, with the same three tasks and two LLM backbones across conditions. (4) Natural-agent runs are monitored for evaluator-tampering attempts, and an evaluator-locking condition is compared with a mutable baseline on runtime overhead, holding tasks and backbones fixed."
+   },
+   "B": {
+    "contribution_type": "empirical_analysis (secondary: artifact)",
+    "problem": "AI-scientist systems fail inside their workflows in easily overlooked ways—inappropriate benchmark selection, data leakage, metric misuse, and post-hoc selection bias—and while human experts can detect these failures when trace logs are available, there is no automated or benchmarked capability for doing so. Existing verification benchmarks inspect only the manuscript artifact, and re-execution benchmarks verify only computational correctness of a declared recipe, so by construction they cannot expose selection bias or benchmark cherry-picking.",
+    "motivation": "Undetected workflow-level integrity violations risk invalidating AI-scientist outputs, and trace logs have been shown to make these violations far easier to detect; open-source AI-scientist systems can now be replayed, making systematic evaluation of workflow-level audit feasible rather than relying on human expert inspection.",
+    "proposed_approach": "The benchmark is built by replaying open-source AI-scientist systems (e.g., Jr. AI Scientist) on about 40 small-but-real ML tasks and injecting each of four failure modes at the workflow level, under two conditions per run: open, where the paper reflects the flaw, and concealed, where the flaw is masked so the manuscript reads clean. In each instance, an agent receives the full provenance trace of an AI-scientist run (tool calls, decision log, code, and data lineage) plus the manuscript, and must emit a per-mode verdict over the four-mode taxonomy plus exact citations of the trace events constituting each violation.",
+    "research_plan": "The evidence is organized around the three falsifiable hypotheses. (1) H1 is tested by comparing trace-augmented audit F1 to paper-only LLM audit F1 on concealed runs, with support defined as an advantage of at least 0.35. (2) H2 is tested by applying re-execution-based checking to selection-bias and benchmark-choice modes, with support defined as scores near zero. (3) H3 is tested by comparing open-to-concealed relative degradation for paper-only audit and trace-augmented audit, with support defined as paper-only degradation of at least 40% and trace-augmented degradation of at most 10%. The abstract does not state what is held matched across compared systems."
+   }
+  },
+  {
+   "id": "R-14",
+   "part": "A",
+   "A": {
+    "contribution_type": "method (secondary: artifact)",
+    "problem": "Rigorous real-world physical research using large language models is stalled by a lack of realistic evaluation benchmarks and by systemic LLM hallucinations.",
+    "motivation": "Addressing these barriers would make automated scientific discovery in quantum many-body simulation more robust, reliable, and transparent.",
+    "proposed_approach": "The work releases a research-level benchmark of 100 tasks in quantum many-body simulation drawn from 21 high-impact journals. The proposed framework is a multi-agent system that enforces self-verification and error correction; it integrates programming verifiers and scientific verifiers to check coding correctness and principle-based physical validity, producing interpretable evidence and error correction at each step.",
+    "research_plan": "(1) The claim that the benchmark is research-level and challenging rests on its construction from 100 tasks in 21 high-impact journals and on testing against current frontier LLMs. (2) The claim that the framework enforces reliable, physically valid outputs rests on comparisons with existing LLM baselines across benchmark scenarios and on evaluation of inference-time scaling."
+   },
+   "B": {
+    "contribution_type": "method",
+    "problem": "Current language agents in autonomous AI scientist systems frequently fail during complex, multi-step experimental execution and validation because they lack adequate error correction and rigorous intermediate verification; this produces an implementation gap between generated research plans and executable, validated results.",
+    "motivation": "As autonomous scientist systems become more capable at generating hypotheses, code, and reports, trustworthy adoption depends on closing the implementation gap so that agent-produced work is executable and its conclusions reliable.",
+    "proposed_approach": "The framework integrates constraint-guided test-time verification and dynamic self-correction loops into autonomous scientific workflows. Scientific verification is decomposed into domain-specific invariant checking, automated test case synthesis, and executable code validation. Test-time interaction and verification compute are scaled to catch errors before conclusions are finalized.",
+    "research_plan": "The comparative claim is evaluated on challenging scientific agent benchmarks against standard prompting and unverified iterative debugging baselines, measuring execution success rates and reliability of discovered findings. The detection claim is addressed through the framework's decomposition into invariant checking, test synthesis, and code validation, though no explicit failure condition or ablation is stated."
+   }
+  },
+  {
+   "id": "D-22",
+   "part": "A",
+   "A": {
+    "contribution_type": "method",
+    "problem": "Large eddy simulation of turbulent flows depends on subgrid-scale closure models, but standard data-driven equation discovery and sparse regression often produce closures that are numerically unstable and lack physical constraints such as correct interscale energy transfer and Galilean invariance.",
+    "motivation": "Stable, accurate, and interpretable subgrid-scale closures are essential for reliable LES, and coupling large language model hypothesis generation with physics-constrained symbolic regression offers a path to automated discovery that current data-driven methods do not provide.",
+    "proposed_approach": "The proposed framework is an autonomous research agent that iteratively generates candidate expression libraries using LLM hypothesis generation, evaluates them via a priori statistical metrics and a posteriori LES stability checks, and refines functional forms through feedback loops that incorporate physical constraints such as interscale energy transfer bounds. The abstract outlines experimental application to two-dimensional turbulent flows and convective systems, with benchmarking against standard eddy-viscosity models and unconstrained sparse regression techniques.",
+    "research_plan": "The evidence is an experimental validation outline: apply the framework to two-dimensional turbulent flows and convective systems, use a priori statistical metrics and a posteriori LES stability checks to evaluate candidate closures, and benchmark discovered closures against standard eddy-viscosity models and unconstrained sparse regression techniques. The abstract does not state explicit quantitative failure conditions or matched compute budgets."
+   },
+   "B": {
+    "contribution_type": "method",
+    "problem": "Subgrid-scale closure models for large-eddy simulation of complex turbulent flows rely heavily on traditional algebraic and dynamic models that struggle with numerical stability, backscatter representation, and generalization across varying regimes. Recent LLM-based discovery methods lack active multi-scale experimental probing and fail to systematically enforce physical principles during interactive discovery loops.",
+    "motivation": "Better subgrid-scale closures would improve large-eddy simulation reliability for complex turbulent flows, and recent LLM capabilities make autonomous, constrained discovery loops tractable.",
+    "proposed_approach": "An autonomous multi-agent framework treats subgrid-scale closure discovery as a principled uncertainty reduction task within interactive large-eddy simulation environments. It integrates specialized LLM agents for hypothesis generation, symbolic algebraic formulation, topological simulation execution via OpenFOAM/LES platforms, and principle-aware verification. Physical constraints and active probing of out-of-distribution turbulent flows are embedded into the agents' reward and iteration loops.",
+    "research_plan": "The paper supports its claims through a comparative evaluation of discovered closure models against traditional hand-crafted and static machine-learning baselines. The abstract does not specify metrics, flow cases, ablations, or failure conditions; the interaction loop with principle-aware verification and active out-of-distribution probing is presented as evidence of constraint satisfaction but without an explicit success criterion."
+   }
+  },
+  {
+   "id": "D-26",
+   "part": "A",
+   "A": {
+    "contribution_type": "method",
+    "problem": "Existing research-idea generation systems either measure novelty of finished papers after the fact or guide generation with learned or self-evaluation judges; no retrieved system uses a live topic-model density landscape of the literature as an explicit control signal during the generation loop.",
+    "motivation": "Bibliometric findings indicate that novelty can be double-edged and has an inverted-U relationship with downstream outcomes, so steering generation toward a moderate novelty band may improve the joint novelty–feasibility of generated ideas.",
+    "proposed_approach": "A closed-loop ideation controller maps the current literature into a continuous density landscape of idea-space using a topic model in the style of BERTopic. Each candidate research idea is positioned in that landscape via its topic-combination profile. A steering module biases each generation round toward a targeted novelty band—moderate sparsity rather than maximal—using an interpretable relative-density reward plus a grounding-based feasibility anchor.",
+    "research_plan": "(1) The first claim is tested by comparing the density-steered controller against judge-only search (Nova) and retrieve-iterate-compare (SciMON) baselines on expert-rated novelty, with feasibility as a non-inferiority constraint. (2) The second claim is tested by comparing moderate and maximal novelty setpoints on a joint novelty–feasibility objective. The pre-registered failure condition is that if the density reward adds nothing beyond black-box judge scores, the controller collapses to a re-ranker and the core claim is falsified, demoting the work to a post-hoc analysis."
+   },
+   "B": {
+    "contribution_type": "method",
+    "problem": "Autonomous AI-scientist systems generate hypotheses from whatever text the agent happens to retrieve, and their success criteria carry no principled notion of which part of the literature has already been explored.",
+    "motivation": "A principled topic map of explored literature makes novelty and integrity measurable in-pipeline, enabling deliberate exploration of underexplored but literature-supported areas and detection of selection bias and metric-misuse failures.",
+    "proposed_approach": "The proposed framework uses one fixed, unsupervised topic map of a field corpus built from a frozen paragraph-embedding-to-topic-simplex projection trained once per corpus. This map supplies a corpus geometry that quantifies hypothesis novelty as divergence from the aggregate topic distribution of explored literature, weighted by per-cell under-coverage. It also provides a steering objective for an exploration-constrained LLM agent loop that directs the experiment-manager agent toward underexplored but literature-supported topic cells. A final audit head consumes both paper text and execution trace to flag topic-space inconsistencies such as conclusions disconnected from cited sources, claims about never-explored regions, and results clustered in an atypically narrow topic-space region.",
+    "research_plan": "Evaluation covers a synthetic corpus with planted sparse topic cells, the BioVerge biomedical benchmark, and a controlled failure-mode corpus with injected violations patterned after documented AI-scientist failures. Under three pre-registered falsifiable claims, the framework is compared to LLM-judge and no-guidance baselines for novelty at matched claim-accuracy; the coverage footprint of generated hypothesis sets is measured to test the steering claim; and audit detection of injected integrity violations is compared with paper-only heuristics by AUC. Support for each claim requires the corresponding comparative difference to be observed; the design holds claim-accuracy matched for the novelty comparison. No additional ablations or robustness checks are described."
+   }
+  },
+  {
+   "id": "D-24",
+   "part": "A",
+   "A": {
+    "contribution_type": "method (secondary: artifact)",
+    "problem": "Current AI systems for scientific discovery generate hypotheses and conduct experiments, but few systematically use topic modeling as an autonomous exploratory tool.",
+    "motivation": "Autonomous topic modeling could let scientific discovery systems analyze latent document structure and detect emerging research directions without relying on static pipelines or manual human-guided analysis.",
+    "proposed_approach": "An LLM-based autonomous agent that searches the hyperparameter space of neural topic models (embedding architecture, cluster count, clustering parameters), evaluates candidate configurations with interpretability and coherence metrics, generates natural language topic descriptions with reasoning, and detects emerging research directions through topic evolution over time. A benchmark suite is constructed from scientific corpora to evaluate autonomous topic discovery agents.",
+    "research_plan": "(1) The performance claim is evaluated on the benchmark suite by comparing discovered topics against static topic modeling pipelines and manual human-guided approaches using coherence, interpretability, novelty, and computational cost; the claim would fail if the agent did not produce more coherent, interpretable, and novel topics at lower computational cost. (2) The bridge claim is supported by demonstrating autonomous hyperparameter optimization and analysis of latent document structure on scientific corpora."
+   },
+   "B": {
+    "contribution_type": "method",
+    "problem": "Autonomous research systems have not been applied to classical and interpretable statistical methods such as topic modeling, leaving practitioners to manually navigate diverse model families and tune numerous hyperparameters.",
+    "motivation": "Automating topic model discovery and configuration would substantially reduce expert effort and make systematic comparison of model families and hyperparameters tractable across document corpora.",
+    "proposed_approach": "The proposed autonomous agent system discovers, configures, and evaluates topic models across document corpora with minimal human input. It combines LLM-driven architecture search across topic model families, agent-guided Bayesian hyperparameter optimization, multi-criteria evaluation integrating quantitative metrics with LLM-based qualitative assessment, and automated scientific reporting.",
+    "research_plan": "The evaluation runs the system on benchmark document collections and compares its discovered configurations and generated comparative findings against hand-tuned baselines. Support requires near-optimal configurations as judged by quantitative and LLM-based qualitative evaluation and findings that match or exceed the baselines; failure would be configurations or reports not meeting that standard under the claimed reduction in expert effort."
+   }
+  }
+ ]
+}

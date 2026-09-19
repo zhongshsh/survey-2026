@@ -32,6 +32,8 @@ const S = {
 const SURVEYS = {
   judge: {
     lang: 'en',
+    bank: 'items.same-idea-judge.json',
+    part: 'A',
     title: 'Same-Idea Judgement',
     blurb: 'Each item shows two anonymized research idea schemas. Decide whether they ' +
            'describe the same core idea. We are measuring how human judgement compares ' +
@@ -39,6 +41,8 @@ const SURVEYS = {
   },
   quality: {
     lang: 'zh',
+    bank: 'items.idea-quality.json',
+    part: 'B',
     title: 'Idea 质量评审',
     blurb: '每题给你一个研究 idea 的结构化描述，请像审稿一样给它打分，' +
            '并判断它做不做得出来、实验大概率会不会 work。' +
@@ -246,7 +250,8 @@ const NOT_RATED = ['contribution_type'];
 
 /** 当前问卷里要评的字段（题面显示五个，评分不含 contribution_type）。 */
 function ratedFields() {
-  return (S.meta.shown_fields || []).filter(f => !NOT_RATED.includes(f));
+  return S.meta.asked_fields ||
+    (S.meta.shown_fields || []).filter(f => !NOT_RATED.includes(f));
 }
 
 /**
@@ -272,7 +277,11 @@ function missingKeys(part, ans) {
 }
 
 function renderA(it) {
-  const fields = (S.meta.shown_fields || []).filter(f => !NOT_RATED.includes(f));
+  // 题面渲染走 shown_fields，逐字段判定走 asked_fields —— 两者不是一回事：
+  // contribution_type 与 proposed_approach 只作上下文，不评。题库没声明
+  // asked_fields 时退回「展示字段减去不评的」。
+  const fields = S.meta.asked_fields ||
+    (S.meta.shown_fields || []).filter(f => !NOT_RATED.includes(f));
   const left = `
     <div class="cmp">
       <div class="col a"><div class="colhead">SCHEMA A</div>${fieldsHtml(it.A)}</div>
@@ -571,7 +580,9 @@ function showJoin(msg) {
     if (PREVIEW) { S.code = 'PREVIEW'; showPid(); S.idx = 0; renderItem(); return; }
     try {
       const r = await apiPost({ action: 'join', survey: S.survey, name,
-                                fresh: S.fresh, item_ids: S.items.map(i => i.id) });
+                                fresh: S.fresh,
+                                items_build: S.meta.build_hash || '',
+                                item_ids: S.items.map(i => i.id) });
       rememberPid(S.survey, r.code);
       // 带 ?p= 重载：新建和「按名字接续」走同一条恢复路径，答案回填不用写第二套
       const u = new URL(location.href);
@@ -651,27 +662,26 @@ function showThanks() {
 /* ------------------------------------------------------------------ 启动 */
 
 async function boot() {
-  let bank;
-  try {
-    bank = await (await fetch('items.json', { cache: 'no-cache' })).json();
-  } catch (e) { showFatal(T().bankFail + e.message); return; }
-  S.items = bank.items;
-  S.meta = bank.meta || {};
-
   // 问卷种类由链接决定（?s=judge / ?s=quality），身份由 p= 或 localStorage 决定。
   const q = new URL(location.href).searchParams;
   S.survey = q.get('s') || q.get('survey') || 'judge';
   if (!SURVEYS[S.survey]) S.survey = 'judge';
+  const cfg0 = SURVEYS[S.survey];
+
+  let bank;
+  try {
+    bank = await (await fetch(cfg0.bank, { cache: 'no-cache' })).json();
+  } catch (e) { showFatal(T().bankFail + e.message); return; }
+  S.items = bank.items;
+  S.meta = bank.meta || {};
   // ?code= 是预先生成的邀请码，仍然支持；?p= 是自助登记拿到的参与者编号
   S.code = (q.get('p') || q.get('code') || recallPid(S.survey) || '').trim().toUpperCase();
   applyChrome();                            // 先定语言与标题，再渲染任何一屏
   setSave(PREVIEW ? 'preview' : 'saved');
 
   if (PREVIEW) {
-    const prefix = S.survey === 'quality' ? 'B-' : 'A-';
     S.code = S.code || 'PREVIEW';
-    S.order = S.items.filter(i => i.id.startsWith(prefix)).map(i => i.id);
-    if (!S.order.length) S.order = S.items.map(i => i.id);
+    S.order = S.items.map(i => i.id);
   } else {
     if (!S.code) { showJoin(); return; }
     let st;
