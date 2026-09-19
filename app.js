@@ -65,7 +65,8 @@ const STR = {
     pidTitle: '参与者编号：换设备或清过浏览器数据时，用它找回记录',
     unfinished: (n) => `还有 ${n} 题没答完，先补齐才能提交。`,
     left: (n) => `还有 ${n} 项未填`,
-    joinFail: '登记失败：', notFound: '没找到这个参与者编号，或服务器暂时无法连接：',
+    joinFail: '登记失败，请重试。',
+    offline: '连不上问卷服务器，请检查网络后重试。',
     errTitle: '出错了', errBody: '刷新页面重试；若反复出现请联系研究者。',
     loading: '正在载入…', bankFail: '题库载入失败：',
     leftover: '还有答案没保存成功，请检查网络后再试。', submitFail: '提交失败：',
@@ -88,7 +89,8 @@ const STR = {
     pidTitle: 'Participant ID — use it to recover your record on another device',
     unfinished: (n) => `${n} items are still incomplete. Please finish them before submitting.`,
     left: (n) => `${n} left on this item`,
-    joinFail: 'Could not register: ', notFound: 'No such participant ID, or the server is unreachable: ',
+    joinFail: 'Could not register. Please try again.',
+    offline: 'Cannot reach the survey server. Check your connection and try again.',
     errTitle: 'Something went wrong', errBody: 'Refresh to retry; if it keeps happening, contact the researcher.',
     loading: 'Loading…', bankFail: 'Could not load the item bank: ',
     leftover: 'Some answers have not been saved yet. Check your connection and try again.',
@@ -132,12 +134,19 @@ function setSave(state, text) {
   n.textContent = text || T()[state] || state;
 }
 
+/** 服务器答了但拒绝了（比如编号不存在）。这是正常状态，不是故障。 */
+function rejected(msg) {
+  const e = new Error(msg || 'rejected');
+  e.rejected = true;
+  return e;
+}
+
 async function apiGet(params) {
   const q = new URLSearchParams(params);   // 无共享 token：邀请码就是凭据
   const r = await fetch(`${CFG.ENDPOINT}?${q}`, { redirect: 'follow' });
   if (!r.ok) throw new Error('GET ' + r.status);
   const j = await r.json();
-  if (!j.ok) throw new Error(j.error || 'server rejected');
+  if (!j.ok) throw rejected(j.error);
   return j;
 }
 
@@ -152,7 +161,7 @@ async function apiPost(body) {
   });
   if (!r.ok) throw new Error('POST ' + r.status);
   const j = await r.json();
-  if (!j.ok) throw new Error(j.error || 'server rejected');
+  if (!j.ok) throw rejected(j.error);
   return j;
 }
 
@@ -570,7 +579,7 @@ function showJoin(msg) {
       location.href = u.toString();
     } catch (e) {
       $('joinGo').disabled = false;
-      showJoin(t.joinFail + e.message);
+      showJoin(e.rejected ? (e.message || t.joinFail) : t.offline);
     }
   });
 }
@@ -651,8 +660,24 @@ async function boot() {
   } else {
     if (!S.code) { showJoin(); return; }
     let st;
-    try { st = await apiGet({ action: 'state', code: S.code }); }
-    catch (e) { showJoin(T().notFound + e.message); return; }
+    try {
+      st = await apiGet({ action: 'state', code: S.code });
+    } catch (e) {
+      // 编号不存在(换过题库、清过表、链接手抄错)就当没带编号，安静回登记页；
+      // 把它当错误弹给受试者只会让人以为自己做错了什么。
+      if (e.rejected) {
+        try { localStorage.removeItem('pid:' + S.survey); } catch (_) { /* 无妨 */ }
+        const u = new URL(location.href);
+        u.searchParams.delete('p');
+        u.searchParams.delete('code');
+        history.replaceState(null, '', u);
+        S.code = null;
+        showJoin();
+      } else {
+        showJoin(T().offline);
+      }
+      return;
+    }
     rememberPid(st.survey || S.survey, S.code);
     S.order = (st.item_ids && st.item_ids.length) ? st.item_ids : S.items.map(i => i.id);
     S.survey = st.survey || 'judge';
