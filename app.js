@@ -585,6 +585,20 @@ function showJoin(msg) {
 }
 
 /* 左上角显示参与者编号 —— 换设备找回记录全靠它，所以要一直看得见。 */
+/** 标题、语言、图标、导航按钮 —— 问卷种类一确定就全部就位，
+    不能等到状态请求回来，否则登记页顶着 index.html 的静态默认值。 */
+function applyChrome() {
+  const cfg = SURVEYS[S.survey] || SURVEYS.judge;
+  const t = T();
+  document.querySelector('.bar .title').textContent = cfg.title;
+  document.title = cfg.title;
+  document.documentElement.lang = cfg.lang === 'en' ? 'en' : 'zh-CN';
+  $('btnPrev').textContent = t.prev;
+  $('btnNext').textContent = t.next;
+  $('btnFinish').textContent = t.submit;
+  setFavicon(S.survey);
+}
+
 function showPid() {
   const n = $('codePill');
   n.textContent = S.code;
@@ -650,7 +664,8 @@ async function boot() {
   if (!SURVEYS[S.survey]) S.survey = 'judge';
   // ?code= 是预先生成的邀请码，仍然支持；?p= 是自助登记拿到的参与者编号
   S.code = (q.get('p') || q.get('code') || recallPid(S.survey) || '').trim().toUpperCase();
-  setSave(PREVIEW ? 'preview' : 'saved');   // 语言定下来之后再写，否则第一帧文案错
+  applyChrome();                            // 先定语言与标题，再渲染任何一屏
+  setSave(PREVIEW ? 'preview' : 'saved');
 
   if (PREVIEW) {
     const prefix = S.survey === 'quality' ? 'B-' : 'A-';
@@ -688,15 +703,7 @@ async function boot() {
   }
 
   showPid();
-  const cfg = SURVEYS[S.survey] || SURVEYS.judge;
-  const t = T();
-  document.querySelector('.bar .title').textContent = cfg.title;
-  document.title = cfg.title;
-  setFavicon(S.survey);
-  document.documentElement.lang = cfg.lang === 'en' ? 'en' : 'zh-CN';
-  $('btnPrev').textContent = t.prev;
-  $('btnNext').textContent = t.next;
-  $('btnFinish').textContent = t.submit;
+  applyChrome();          // 服务端可能纠正了 survey，按最终值再刷一次
 
   if (S.finished) { showThanks(); return; }
   // 续答落到第一道没答的题
