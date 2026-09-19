@@ -146,7 +146,9 @@ async function apiPost(body) {
     method: 'POST',
     headers: { 'Content-Type': 'text/plain;charset=utf-8' },   // 不要改成 json
     redirect: 'follow',
-    body: JSON.stringify({ code: S.code, session_id: SESSION_ID, ...body }),
+    body: JSON.stringify({ code: S.code, session_id: SESSION_ID,
+                           items_build: S.meta.build_hash || S.meta.build || '',
+                           ...body }),
   });
   if (!r.ok) throw new Error('POST ' + r.status);
   const j = await r.json();
@@ -202,6 +204,7 @@ window.addEventListener('pagehide', () => {
       method: 'POST', keepalive: true,
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
       body: JSON.stringify({ code: S.code, session_id: SESSION_ID,
+                             items_build: S.meta.build_hash || S.meta.build || '',
                              action: 'save', items: [...Outbox.pending.values()] }),
     });
   } catch (e) { /* 卸载期发不出去也没辙，本地已存 */ }
