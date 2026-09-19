@@ -63,7 +63,8 @@ const STR = {
     thanks: '已提交，谢谢', thanksBody: '答案已全部保存。可以关闭页面了。',
     again: '重新填一份', againNote: '会作为一份新的记录，不覆盖刚才提交的内容。',
     pidTitle: '参与者编号：换设备或清过浏览器数据时，用它找回记录',
-    unfinished: (n) => `还有 ${n} 题没作答，确定提交吗？`,
+    unfinished: (n) => `还有 ${n} 题没答完，先补齐才能提交。`,
+    left: (n) => `还有 ${n} 项未填`,
     joinFail: '登记失败：', notFound: '没找到这个参与者编号，或服务器暂时无法连接：',
     errTitle: '出错了', errBody: '刷新页面重试；若反复出现请联系研究者。',
     loading: '正在载入…', bankFail: '题库载入失败：',
@@ -85,7 +86,8 @@ const STR = {
     thanks: 'Submitted — thank you', thanksBody: 'All answers are saved. You can close this page.',
     again: 'Fill out another', againNote: 'Starts a separate record; it does not overwrite what you just submitted.',
     pidTitle: 'Participant ID — use it to recover your record on another device',
-    unfinished: (n) => `${n} items are still unanswered. Submit anyway?`,
+    unfinished: (n) => `${n} items are still incomplete. Please finish them before submitting.`,
+    left: (n) => `${n} left on this item`,
     joinFail: 'Could not register: ', notFound: 'No such participant ID, or the server is unreachable: ',
     errTitle: 'Something went wrong', errBody: 'Refresh to retry; if it keeps happening, contact the researcher.',
     loading: 'Loading…', bankFail: 'Could not load the item bank: ',
@@ -229,6 +231,33 @@ const n15 = (lo, hi) => [{ v: 1, t: '1', s: lo }, { v: 2, t: '2' }, { v: 3, t: '
    判「相同」几乎必然为真，一致性读数会被它稀释成噪声。
    但它仍然要在左边的 schema 里显示 —— 它是读懂另外四个字段的上下文。 */
 const NOT_RATED = ['contribution_type'];
+
+/** 当前问卷里要评的字段（题面显示五个，评分不含 contribution_type）。 */
+function ratedFields() {
+  return (S.meta.shown_fields || []).filter(f => !NOT_RATED.includes(f));
+}
+
+/**
+ * 一道题还缺哪些必答项。只看答案对象，不碰 DOM —— 提交前要把没打开过的题
+ * 也检查一遍，那些题根本没有 DOM。
+ */
+function missingKeys(part, ans) {
+  ans = ans || {};
+  const need = part === 'A'
+    ? [...ratedFields().map(f => 'f_' + f), 'same_idea', 'confidence']
+    : ['originality', 'significance', 'soundness', 'specificity',
+       'feasibility', 'success', 'overall', 'guess_source', 'expertise', 'risk'];
+  const miss = need.filter(k => {
+    const v = ans[k];
+    return v === undefined || v === null || String(v).trim() === '';
+  });
+  // 卡点多选只在「可行性 ≤3」时必填 —— 它本来就是那一档的追问
+  if (part === 'B' && Number(ans.feasibility) <= 3 &&
+      !(Array.isArray(ans.blockers) && ans.blockers.length)) {
+    miss.push('blockers');
+  }
+  return miss;
+}
 
 function renderA(it) {
   const fields = (S.meta.shown_fields || []).filter(f => !NOT_RATED.includes(f));
@@ -433,6 +462,11 @@ function renderItem() {
   const capture = () => {
     const ans = readItem(body);
     S.answers[it.id] = ans;
+    body.querySelectorAll('.missing').forEach(n => {
+      if (n.querySelector(':checked') || n.querySelector('textarea')?.value.trim()) {
+        n.classList.remove('missing');
+      }
+    });
     Outbox.queue({ item_id: it.id, part: it.part, answer: ans,
                    client_ts: new Date().toISOString(),
                    elapsed_ms: Date.now() - shownAt });
@@ -462,14 +496,39 @@ function renderItem() {
   updateProgress();
 }
 
+function partOf(id) {
+  const it = S.items.find(x => x.id === id);
+  return it ? it.part : 'A';
+}
+
+/** 全部必答项都填了才算这道题完成 —— 进度条与提交闸用的是同一个判据。 */
 function answered(id) {
-  const a = S.answers[id];
-  return a && Object.keys(a).length > 0;
+  return missingKeys(partOf(id), S.answers[id]).length === 0;
 }
 
 function updateProgress() {
   const done = S.order.filter(answered).length;
   $('progressBar').style.width = `${(done / Math.max(1, S.order.length)) * 100}%`;
+  const miss = missingKeys(partOf(S.order[S.idx]), S.answers[S.order[S.idx]]);
+  const t = T();
+  $('leftCount').textContent = miss.length ? t.left(miss.length) : '';
+}
+
+/** 把缺的项标红并滚到第一个。只在用户试图前进时调用，不在作答过程中骚扰。 */
+function flagMissing(keys) {
+  const body = document.getElementById('itemBody');
+  if (!body) return;
+  body.querySelectorAll('.missing').forEach(n => n.classList.remove('missing'));
+  let first = null;
+  keys.forEach(k => {
+    const input = body.querySelector(`[name="${CSS.escape(k)}"]`);
+    if (!input) return;
+    // textarea 不在 .row 里，直接标它自己
+    const box = input.closest('.fieldq') || input.closest('.row') || input;
+    box.classList.add('missing');
+    if (!first) first = box;
+  });
+  if (first) first.scrollIntoView({ block: 'center', behavior: 'smooth' });
 }
 
 function showJoin(msg) {
@@ -620,11 +679,23 @@ async function boot() {
 
 $('btnPrev').addEventListener('click', () => { if (S.idx > 0) { S.idx--; renderItem(); } });
 $('btnNext').addEventListener('click', () => {
+  const id = S.order[S.idx];
+  const miss = missingKeys(partOf(id), S.answers[id]);
+  if (miss.length) { flagMissing(miss); return; }      // 必答项没填完不放行
   if (S.idx < S.order.length - 1) { S.idx++; renderItem(); }
 });
 $('btnFinish').addEventListener('click', async () => {
-  const missing = S.order.filter(id => !answered(id));
-  if (missing.length && !confirm(T().unfinished(missing.length))) return;
+  const cur = S.order[S.idx];
+  const curMiss = missingKeys(partOf(cur), S.answers[cur]);
+  if (curMiss.length) { flagMissing(curMiss); return; }
+  const incomplete = S.order.filter(id => !answered(id));
+  if (incomplete.length) {                       // 别的题还没答完，跳过去
+    alert(T().unfinished(incomplete.length));
+    S.idx = S.order.indexOf(incomplete[0]);
+    renderItem();
+    flagMissing(missingKeys(partOf(incomplete[0]), S.answers[incomplete[0]]));
+    return;
+  }
   if (PREVIEW) { showThanks(); return; }
   await Outbox.flush();
   if (Outbox.pending.size) { alert(T().leftover); return; }

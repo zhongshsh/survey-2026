@@ -121,6 +121,9 @@
 
   .fieldq{border:1px solid var(--rule); border-radius:4px; background:var(--card);
     padding:7px 10px; margin-bottom:7px}
+  /* 未填项：点「下一题」时才亮，改完即灭 */
+  .missing{outline:2px solid #c0392b; outline-offset:2px; border-radius:4px}
+  .missing .fname,.missing .q{color:#c0392b}
   .fieldq .fname{font-family:"IBM Plex Mono",monospace; font-size:11px; letter-spacing:.06em;
     text-transform:uppercase; color:var(--ink3); display:block; margin-bottom:4px}
   .fieldq .opts{display:flex; gap:12px; flex-wrap:wrap}
@@ -170,6 +173,7 @@
   button.primary:hover:not(:disabled){filter:brightness(1.08); color:#fff}
   .nav .spacer{flex:1}
   .nav .count{font-family:"IBM Plex Mono",monospace; font-size:12.5px; color:var(--ink3)}
+  .nav .left{font-size:12.5px; color:#c0392b}
 </style>
 </head>
 <body>
@@ -192,6 +196,7 @@
   <div class="wrap">
     <button id="btnPrev">← 上一题</button>
     <span class="count" id="counter"></span>
+    <span class="left" id="leftCount"></span>
     <span class="spacer"></span>
     <button id="btnNext" class="primary">下一题 →</button>
     <button id="btnFinish" class="primary" hidden>提交问卷</button>
