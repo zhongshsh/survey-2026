@@ -31,18 +31,69 @@ const S = {
    受试者要求不一样，所以各发各的链接，互不相见。 */
 const SURVEYS = {
   judge: {
-    title: 'LLM judge 一致性',
-    blurb: '每题给你两个匿名化的研究 idea 描述，请判断它们是不是同一个 idea。' +
-           '我们要看的是人的判断与一套自动判定方法是否一致，所以<b>没有标准答案</b>，' +
-           '按你自己的标准判即可。',
+    lang: 'en',
+    title: 'Same-Idea Judgement',
+    blurb: 'Each item shows two anonymized research idea schemas. Decide whether they ' +
+           'describe the same core idea. We are measuring how human judgement compares ' +
+           'with an automated judge, so there is <b>no answer key</b> — apply your own standard.',
   },
   quality: {
+    lang: 'zh',
     title: 'Idea 质量评审',
     blurb: '每题给你一个研究 idea 的结构化描述，请像审稿一样给它打分，' +
            '并判断它做不做得出来、实验大概率会不会 work。' +
            '部分 idea 来自真实论文，部分由模型生成，<b>题面已统一格式</b>，请只依据内容评判。',
   },
 };
+
+/* 界面文案按问卷语言切换。judge 那份全英文 —— 它的题干是从
+   ar/evaluation/judging.py 的 build_judge_sys() 原文搬来的，
+   中英混排会让「人看到的」和「模型看到的」再次漂移。 */
+const STR = {
+  zh: {
+    privacy: '不收集个人身份信息，数据仅用于学术研究。点「开始」即表示同意参与，可随时退出。',
+    len: (n) => `共 ${n} 题，可分多次完成，答案自动保存。`,
+    nameLabel: '你的名字', namePh: '留空 = 匿名',
+    nameHint: '填了名字，换设备时打同样的名字就能接着上次继续。',
+    start: '开始', resumeQ: '已经答过一半？',
+    resumeA: '同一浏览器直接打开原链接就会接着上次的地方继续。换了设备或清过浏览器数据：' +
+             '填了名字的，打同样的名字即可；匿名的，用左上角参与者编号找回记录。',
+    prev: '← 上一题', next: '下一题 →', submit: '提交问卷',
+    saved: '已保存', saving: '保存中…', offline: '未保存·重试中', preview: '预览模式',
+    thanks: '已提交，谢谢', thanksBody: '答案已全部保存。可以关闭页面了。',
+    again: '重新填一份', againNote: '会作为一份新的记录，不覆盖刚才提交的内容。',
+    pidTitle: '参与者编号：换设备或清过浏览器数据时，用它找回记录',
+    unfinished: (n) => `还有 ${n} 题没作答，确定提交吗？`,
+    joinFail: '登记失败：', notFound: '没找到这个参与者编号，或服务器暂时无法连接：',
+    errTitle: '出错了', errBody: '刷新页面重试；若反复出现请联系研究者。',
+    loading: '正在载入…', bankFail: '题库载入失败：',
+    leftover: '还有答案没保存成功，请检查网络后再试。', submitFail: '提交失败：',
+  },
+  en: {
+    privacy: 'No personally identifying information is collected; the data is used for ' +
+             'academic research only. Clicking Start indicates your consent to take part. ' +
+             'You may stop at any time.',
+    len: (n) => `${n} items. You can complete them in several sittings; answers save automatically.`,
+    nameLabel: 'Your name', namePh: 'leave blank to stay anonymous',
+    nameHint: 'If you give a name, entering the same name on another device resumes where you left off.',
+    start: 'Start', resumeQ: 'Already partway through?',
+    resumeA: 'Reopening the original link in the same browser resumes automatically. ' +
+             'On another device, or after clearing browser data: if you gave a name, enter the ' +
+             'same name; if you were anonymous, use the participant ID shown at the top left.',
+    prev: '← Previous', next: 'Next →', submit: 'Submit',
+    saved: 'Saved', saving: 'Saving…', offline: 'Not saved · retrying', preview: 'Preview mode',
+    thanks: 'Submitted — thank you', thanksBody: 'All answers are saved. You can close this page.',
+    again: 'Fill out another', againNote: 'Starts a separate record; it does not overwrite what you just submitted.',
+    pidTitle: 'Participant ID — use it to recover your record on another device',
+    unfinished: (n) => `${n} items are still unanswered. Submit anyway?`,
+    joinFail: 'Could not register: ', notFound: 'No such participant ID, or the server is unreachable: ',
+    errTitle: 'Something went wrong', errBody: 'Refresh to retry; if it keeps happening, contact the researcher.',
+    loading: 'Loading…', bankFail: 'Could not load the item bank: ',
+    leftover: 'Some answers have not been saved yet. Check your connection and try again.',
+    submitFail: 'Submit failed: ',
+  },
+};
+const T = () => STR[(SURVEYS[S.survey] || SURVEYS.judge).lang] || STR.zh;
 
 const $ = (id) => document.getElementById(id);
 const el = (tag, cls, html) => {
@@ -58,7 +109,7 @@ const esc = (s) => String(s).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;'
 function setSave(state, text) {
   const n = $('saveState');
   n.dataset.s = state;
-  n.textContent = text || { saved: '已保存', saving: '保存中…', offline: '未保存·重试中', preview: '预览模式' }[state];
+  n.textContent = text || T()[state] || state;
 }
 
 async function apiGet(params) {
@@ -167,32 +218,41 @@ function renderA(it) {
   // 右栏只有 400px，四列表格会挤成一团；改成一字段一块的竖排控件
   const blocks = fields.map(f => `
     <div class="fieldq"><span class="fname">${esc(f)}</span><div class="opts">
-      <label class="opt"><input type="radio" name="f_${f}" value="same">相同</label>
-      <label class="opt"><input type="radio" name="f_${f}" value="diff">不同</label>
-      <label class="opt"><input type="radio" name="f_${f}" value="unsure">说不准</label>
+      <label class="opt"><input type="radio" name="f_${f}" value="same">Same</label>
+      <label class="opt"><input type="radio" name="f_${f}" value="diff">Different</label>
+      <label class="opt"><input type="radio" name="f_${f}" value="unsure">Unsure</label>
     </div></div>`).join('');
 
+  // 下面的措辞逐句照搬 ar/evaluation/judging.py 的 build_judge_sys(五字段轴)：
+  // 人和模型必须拿到同一条指令，任何改写都会变成人机差异里说不清的一项。
   const right = `
     <div class="ans">
-      <h4>第一步 · 逐字段判定</h4>
-      <p class="hint">只看这一个字段，当其余字段被遮住。措辞、命名、详略不同不算不同；
-        只是同一个话题 / 任务 / 数据集 / 技术家族<b>不算</b>相同。
-        任一侧该字段没有内容一律判「不同」。</p>
+      <h4>Step 1 · Per-field judgement</h4>
+      <p class="hint">For each field in turn, decide whether A and B are substantially the
+        same <b>on that field alone</b>, as if the other fields were hidden from you.
+        If a field has no corresponding content in A or B (including when both are missing
+        or use the placeholder <code>None</code>), its verdict is <b>Different</b>.</p>
       ${blocks}
     </div>
     <div class="ans">
-      <h4>第二步 · 整体判定</h4>
+      <h4>Step 2 · Whole idea</h4>
       <div class="row">
-        <div class="q">A 与 B 是否是同一个 core idea？
-          <small>门槛：处理的 problem 实质相同 <b>且</b> 提出的 approach 实质相同。
-            这不是上面五格的投票或平均。</small></div>
-        ${scale('same_idea', [{ v: 'yes', t: '是' }, { v: 'no', t: '否' }])}
+        <div class="q">Do A and B describe the same core idea?
+          <small>Same only if the two schemas address substantially the same
+            <b>problem</b> AND propose substantially the same <b>approach</b>.
+            This is your own judgement on the full schema, NOT a vote or an average over
+            Step 1 — agreeing on problem, motivation, contribution_type alone is not enough.</small></div>
+        ${scale('same_idea', [{ v: 'yes', t: 'Yes' }, { v: 'no', t: 'No' }])}
       </div>
+      <p class="hint">In both steps: different wording, naming, or level of detail does not
+        matter; merely sharing a topic, task, dataset, or a general technique family does
+        <b>NOT</b> count as the same.</p>
       <div class="row">
-        <div class="q">把握程度</div>
-        ${scale('confidence', n15('很不确定', '很确定'))}
+        <div class="q">Confidence</div>
+        ${scale('confidence', n15('not at all', 'very sure'))}
       </div>
-      <div class="row"><div class="q">一句话理由<small>写清决定性的那一点，不要复述两边</small></div></div>
+      <div class="row"><div class="q">One-sentence reason
+        <small>Name the one thing that decided it, rather than restating both sides.</small></div></div>
       <textarea name="reason" rows="3"></textarea>
     </div>`;
   return { left, right };
@@ -328,7 +388,7 @@ function renderItem() {
   if (!it) { showFatal(`题目 ${id} 不在 items.json 里`); return; }
   shownAt = Date.now();
 
-  const partName = it.part === 'A' ? '判断两个 idea 是否相同' : '评审一个 idea';
+  const partName = it.part === 'A' ? 'same-idea judgement' : '评审一个 idea';
   const parts = it.part === 'A' ? renderA(it) : renderB(it);
   const card = el('div', 'item');
   card.innerHTML =
@@ -395,23 +455,20 @@ function showJoin(msg) {
   $('nav').hidden = true;
   $('main').classList.remove('wide');
   const cfg = SURVEYS[S.survey] || SURVEYS.judge;
+  const t = T();
   const p = el('div', 'panel');
   p.innerHTML = `
     <h2>${esc(cfg.title)}</h2>
     <p>${cfg.blurb}</p>
-    <p>不收集个人身份信息，数据仅用于学术研究。点「开始」即表示同意参与，可随时退出。
-      共 ${S.order.length || S.items.length} 题，可分多次完成，答案自动保存。</p>
+    <p>${t.privacy} ${t.len(S.order.length || S.items.length)}</p>
     ${msg ? `<div class="note">${esc(msg)}</div>` : ''}
-    <div class="row" style="margin-top:18px"><div class="q">你的名字</div></div>
-    <input type="text" id="nameIn" placeholder="留空 = 匿名" maxlength="60" style="max-width:280px">
-    <p style="font-size:12.5px;color:var(--ink3);margin-top:6px">
-      填了名字，换设备时打同样的名字就能接着上次继续。</p>
-    <p style="margin-top:14px"><button class="primary" id="joinGo">开始</button></p>
+    <div class="row" style="margin-top:18px"><div class="q">${t.nameLabel}</div></div>
+    <input type="text" id="nameIn" placeholder="${t.namePh}" maxlength="60" style="max-width:280px">
+    <p style="font-size:12.5px;color:var(--ink3);margin-top:6px">${t.nameHint}</p>
+    <p style="margin-top:14px"><button class="primary" id="joinGo">${t.start}</button></p>
     <details style="margin-top:14px">
-      <summary style="cursor:pointer;font-size:12.5px;color:var(--ink3)">已经答过一半？</summary>
-      <p style="margin-top:8px">同一浏览器直接打开原链接就会接着上次的地方继续。
-        换了设备或清过浏览器数据：填了名字的，打同样的名字即可；
-        匿名的，用左上角参与者编号找回记录。</p>
+      <summary style="cursor:pointer;font-size:12.5px;color:var(--ink3)">${t.resumeQ}</summary>
+      <p style="margin-top:8px">${t.resumeA}</p>
     </details>`;
   $('main').replaceChildren(p);
 
@@ -430,7 +487,7 @@ function showJoin(msg) {
       location.href = u.toString();
     } catch (e) {
       $('joinGo').disabled = false;
-      showJoin('登记失败：' + e.message + '。请检查网络后重试。');
+      showJoin(t.joinFail + e.message);
     }
   });
 }
@@ -439,7 +496,7 @@ function showJoin(msg) {
 function showPid() {
   const n = $('codePill');
   n.textContent = S.code;
-  n.title = '参与者编号：换设备或清过浏览器数据时，用它找回记录';
+  n.title = T().pidTitle;
   n.hidden = false;
 }
 
@@ -454,19 +511,20 @@ function recallPid(survey) {
 function showFatal(msg) {
   $('nav').hidden = true;
   $('main').classList.remove('wide');
+  const t = T();
   $('main').replaceChildren(el('div', 'panel',
-    `<h2>出错了</h2><p>${esc(msg)}</p><p>刷新页面重试；若反复出现请联系研究者。</p>`));
+    `<h2>${t.errTitle}</h2><p>${esc(msg)}</p><p>${t.errBody}</p>`));
 }
 
 function showThanks() {
   $('nav').hidden = true;
   $('main').classList.remove('wide');
+  const t = T();
   const p = el('div', 'panel');
-  p.innerHTML = `<h2>已提交，谢谢</h2>
-    <p>答案已全部保存。可以关闭页面了。</p>
-    <p style="margin-top:16px"><button id="againGo">重新填一份</button></p>
-    <p style="font-size:12.5px;color:var(--ink3)">
-      会作为一份新的记录，不覆盖刚才提交的内容。</p>`;
+  p.innerHTML = `<h2>${t.thanks}</h2>
+    <p>${t.thanksBody}</p>
+    <p style="margin-top:16px"><button id="againGo">${t.again}</button></p>
+    <p style="font-size:12.5px;color:var(--ink3)">${t.againNote}</p>`;
   $('main').replaceChildren(p);
   $('againGo').addEventListener('click', () => {
     // 换一份全新记录：清掉本地 pid 和 URL 上的 ?p=，并让下一次 join 跳过按名字接续
@@ -487,12 +545,10 @@ function showThanks() {
 /* ------------------------------------------------------------------ 启动 */
 
 async function boot() {
-  setSave(PREVIEW ? 'preview' : 'saved', PREVIEW ? '预览模式' : '已连接');
-
   let bank;
   try {
     bank = await (await fetch('items.json', { cache: 'no-cache' })).json();
-  } catch (e) { showFatal('题库载入失败：' + e.message); return; }
+  } catch (e) { showFatal(T().bankFail + e.message); return; }
   S.items = bank.items;
   S.meta = bank.meta || {};
 
@@ -502,6 +558,7 @@ async function boot() {
   if (!SURVEYS[S.survey]) S.survey = 'judge';
   // ?code= 是预先生成的邀请码，仍然支持；?p= 是自助登记拿到的参与者编号
   S.code = (q.get('p') || q.get('code') || recallPid(S.survey) || '').trim().toUpperCase();
+  setSave(PREVIEW ? 'preview' : 'saved');   // 语言定下来之后再写，否则第一帧文案错
 
   if (PREVIEW) {
     const prefix = S.survey === 'quality' ? 'B-' : 'A-';
@@ -512,7 +569,7 @@ async function boot() {
     if (!S.code) { showJoin(); return; }
     let st;
     try { st = await apiGet({ action: 'state', code: S.code }); }
-    catch (e) { showJoin('没找到这个参与者编号，或服务器暂时无法连接：' + e.message); return; }
+    catch (e) { showJoin(T().notFound + e.message); return; }
     rememberPid(st.survey || S.survey, S.code);
     S.order = (st.item_ids && st.item_ids.length) ? st.item_ids : S.items.map(i => i.id);
     S.survey = st.survey || 'judge';
@@ -524,8 +581,13 @@ async function boot() {
 
   showPid();
   const cfg = SURVEYS[S.survey] || SURVEYS.judge;
+  const t = T();
   document.querySelector('.bar .title').textContent = cfg.title;
-  document.title = cfg.title + ' · 问卷';
+  document.title = cfg.title;
+  document.documentElement.lang = cfg.lang === 'en' ? 'en' : 'zh-CN';
+  $('btnPrev').textContent = t.prev;
+  $('btnNext').textContent = t.next;
+  $('btnFinish').textContent = t.submit;
 
   if (S.finished) { showThanks(); return; }
   // 续答落到第一道没答的题
@@ -540,12 +602,12 @@ $('btnNext').addEventListener('click', () => {
 });
 $('btnFinish').addEventListener('click', async () => {
   const missing = S.order.filter(id => !answered(id));
-  if (missing.length && !confirm(`还有 ${missing.length} 题没作答，确定提交吗？`)) return;
+  if (missing.length && !confirm(T().unfinished(missing.length))) return;
   if (PREVIEW) { showThanks(); return; }
   await Outbox.flush();
-  if (Outbox.pending.size) { alert('还有答案没保存成功，请检查网络后再试。'); return; }
+  if (Outbox.pending.size) { alert(T().leftover); return; }
   try { await apiPost({ action: 'finish', detail: { n_items: S.order.length } }); }
-  catch (e) { alert('提交失败：' + e.message); return; }
+  catch (e) { alert(T().submitFail + e.message); return; }
   showThanks();
 });
 
