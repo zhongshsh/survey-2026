@@ -225,8 +225,13 @@ function scale(name, opts) {
 const n15 = (lo, hi) => [{ v: 1, t: '1', s: lo }, { v: 2, t: '2' }, { v: 3, t: '3' },
                          { v: 4, t: '4' }, { v: 5, t: '5', s: hi }];
 
+/* 逐字段判定不评 contribution_type：它只有五个取值、绝大多数是 method，
+   判「相同」几乎必然为真，一致性读数会被它稀释成噪声。
+   但它仍然要在左边的 schema 里显示 —— 它是读懂另外四个字段的上下文。 */
+const NOT_RATED = ['contribution_type'];
+
 function renderA(it) {
-  const fields = S.meta.shown_fields || [];
+  const fields = (S.meta.shown_fields || []).filter(f => !NOT_RATED.includes(f));
   const left = `
     <div class="cmp">
       <div class="col a"><div class="colhead">SCHEMA A</div>${fieldsHtml(it.A)}</div>
