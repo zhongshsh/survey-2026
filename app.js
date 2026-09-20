@@ -428,7 +428,7 @@ function renderB(it) {
     <div class="ans">
       <h4>Overall</h4>
       <div class="row"><div class="q"><b>Rating</b>
-        <small>Overall score, ICLR 2026 scale.</small></div>
+        <small>Your overall score for this submission.</small></div>
         ${scale('rating', [
           { v: 0, t: '0', s: 'strong reject' },
           { v: 2, t: '2', s: 'reject' },
