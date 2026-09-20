@@ -569,6 +569,17 @@ function flagMissing(keys) {
   if (first) first.scrollIntoView({ block: 'center', behavior: 'smooth' });
 }
 
+/** 登记页要报的题数：拆了卷就报单卷的题数，别报题库总量。 */
+function formSize() {
+  if (S.order.length) return S.order.length;
+  const f = S.meta.forms;
+  if (f) {
+    const k = Object.keys(f);
+    if (k.length) return f[k[0]].length;
+  }
+  return S.items.length;
+}
+
 function showJoin(msg) {
   $('nav').hidden = true;
   $('main').classList.remove('wide');
@@ -578,9 +589,8 @@ function showJoin(msg) {
   p.innerHTML = `
     <h2>${esc(cfg.title)}</h2>
     <p>${cfg.blurb}</p>
-    <p>${t.privacy} ${t.len(S.order.length || S.items.length,
-        Math.max(1, Math.round((S.order.length || S.items.length) *
-                               (cfg.minPerItem || 1.8))))}</p>
+    <p>${t.privacy} ${t.len(formSize(),
+        Math.max(1, Math.round(formSize() * (cfg.minPerItem || 1.8))))}</p>
     ${msg ? `<div class="note">${esc(msg)}</div>` : ''}
     <div class="row" style="margin-top:18px"><div class="q">${t.nameLabel}</div></div>
     <input type="text" id="nameIn" placeholder="${t.namePh}" maxlength="60" style="max-width:280px">
@@ -598,9 +608,11 @@ function showJoin(msg) {
     const name = $('nameIn').value.trim();
     if (PREVIEW) { S.code = 'PREVIEW'; showPid(); S.idx = 0; renderItem(); return; }
     try {
+      // forms 非空时由后端轮转分配其中一份；前端只把候选交上去
       const r = await apiPost({ action: 'join', survey: S.survey, name,
                                 fresh: S.fresh,
                                 items_build: S.meta.build_hash || '',
+                                forms: S.meta.forms || null,
                                 item_ids: S.items.map(i => i.id) });
       rememberPid(S.survey, r.code);
       // 带 ?p= 重载：新建和「按名字接续」走同一条恢复路径，答案回填不用写第二套
