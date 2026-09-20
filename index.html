@@ -118,8 +118,10 @@
   .rate .ans{margin-top:16px; padding-top:13px}
   .rate .ans:first-child{margin-top:0; padding-top:0; border-top:none}
   .rate .row{margin-bottom:14px}
-  .rate .row .q{flex:1 1 100%}
-  .rate .scale{width:100%}
+  /* 栏宽够时题干与刻度并排，不够时自动换行 —— 原先写死 100% 强制换行，
+     右栏放宽之后会留下一整行空白 */
+  .rate .row .q{flex:1 1 190px}
+  .rate .scale{flex:1 1 auto}
   .rate .scale label{flex:1 1 auto; min-width:44px; padding:5px 6px}
   /* Part B 题面：先标题摘要，再结构化 schema */
   .bmeta{font-family:"IBM Plex Mono",monospace; font-size:10.5px; letter-spacing:.1em;
@@ -195,8 +197,9 @@
   .post{background:var(--card); border:1px solid var(--rule2); border-radius:10px;
     box-shadow:var(--shadow); margin-bottom:18px; overflow:hidden;
     border-left:3px solid transparent; transition:border-left-color .25s;
-    /* 评分栏随屏幕微涨，但有上下限：太窄刻度会换行，太宽白占地方 */
-    display:grid; grid-template-columns:minmax(0,1fr) clamp(340px, 24vw, 460px)}
+    /* 左右更均衡：评分栏随屏幕涨得更快，上限也放宽。原先固定在 460px 封顶，
+       宽屏上左栏是右栏的三倍，视觉重心整个偏到左边。 */
+    display:grid; grid-template-columns:minmax(0,1fr) clamp(380px, 34vw, 600px)}
   @media (max-width:1040px){ .post{grid-template-columns:1fr} }
   .post.done{border-left-color:var(--good)}
   .post > .inner{padding:18px 20px; min-width:0}
