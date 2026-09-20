@@ -560,7 +560,7 @@ function pageNavSync() {
     const b = document.getElementById(id);
     if (b) b.disabled = off;
   });
-  railHere(S.order[S.page]);
+  railRender();
 }
 
 /* 开头的评审说明。放在所有卡片之前，讲清三件事：评什么、三个板块各自的依据、
@@ -627,43 +627,46 @@ function guideSeen() {
   try { return localStorage.getItem('guide:' + S.code) === '1'; } catch (e) { return false; }
 }
 
-/** 左侧题号条：一格一题，填好变绿，点一下跳过去。 */
-function buildRail(cards) {
+/* 题号条。不再铺满 32 个 —— 那样占掉半行且大部分是噪声。
+   只显示当前题附近的一段，加上首尾两个锚点，中间用省略号。
+   每次翻页或作答都重建：九个按钮而已，比维护增量状态省心。 */
+const RAIL_SPAN = 2;          // 当前题左右各留几个
+
+function railWindow() {
+  const n = S.order.length, cur = S.page;
+  const keep = new Set([0, n - 1]);
+  for (let i = cur - RAIL_SPAN; i <= cur + RAIL_SPAN; i++) {
+    if (i >= 0 && i < n) keep.add(i);
+  }
+  const idx = [...keep].sort((a, b) => a - b);
+  const out = [];
+  idx.forEach((i, k) => {
+    if (k && i - idx[k - 1] > 1) out.push(null);   // null = 省略号
+    out.push(i);
+  });
+  return out;
+}
+
+function railRender() {
   const host = document.getElementById('railHost');
   if (!host) return;
   const rail = el('div', 'feedrail');
-  rail.id = 'feedRail';
-  S.order.forEach((id, i) => {
+  railWindow().forEach(i => {
+    if (i === null) {
+      rail.appendChild(el('span', 'gap', '…'));
+      return;
+    }
+    const id = S.order[i];
     const b = el('button', null, String(i + 1).padStart(2, '0'));
     b.type = 'button';
     b.dataset.item = id;
     b.title = `#${i + 1}`;
-    b.addEventListener('click', () => {
-      showPage(pageOf(i), { keepScroll: true });     // 先翻到那一页，再滚过去
-      cards.get(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    });
+    if (answered(id)) b.classList.add('done');
+    if (i === S.page) b.classList.add('here');
+    b.addEventListener('click', () => showPage(i));
     rail.appendChild(b);
   });
   host.replaceChildren(rail);
-}
-
-function railSync() {
-  const rail = document.getElementById('feedRail');
-  if (!rail) return;
-  rail.querySelectorAll('button').forEach(b => {
-    b.classList.toggle('done', answered(b.dataset.item));
-  });
-}
-
-/** 当前看的是哪一题，题号条上高亮它。 */
-function railHere(id) {
-  const rail = document.getElementById('feedRail');
-  if (!rail) return;
-  rail.querySelectorAll('button').forEach(b => {
-    const on = b.dataset.item === id;
-    b.classList.toggle('here', on);
-    if (on) b.scrollIntoView({ block: 'nearest', inline: 'center' });
-  });
 }
 
 function feedProgress() {
@@ -677,7 +680,7 @@ function feedProgress() {
   }
   const btn = document.getElementById('feedSubmit');
   if (btn) btn.disabled = done < n;
-  railSync();
+  railRender();
 }
 
 /** 按问卷模式选渲染方式。judge = 分页，quality = 信息流。 */
@@ -736,7 +739,6 @@ function renderFeed() {
       const id = e.target.dataset.item;
       if (!e.isIntersecting) return;
       if (!seenAt.has(id)) seenAt.set(id, Date.now());
-      railHere(id);
     }), { threshold: 0.35 });
     cards.forEach(c => io.observe(c));
   }
@@ -746,11 +748,12 @@ function renderFeed() {
     bar = el('div', 'feedbar');
     bar.id = 'feedBar';
     bar.innerHTML = `<div class="wrap">
-      <div id="railHost"></div>
       <div class="ctl">
         <button class="pg" id="pgPrev" type="button">←</button>
         <span class="cnt" id="pgLabel"></span>
         <button class="pg" id="pgNext" type="button">→</button>
+        <span class="grow"></span>
+        <div id="railHost"></div>
         <span class="grow"></span>
         <span class="cnt" id="feedCnt"></span>
         <span class="sv" id="feedSave"></span>
@@ -765,7 +768,7 @@ function renderFeed() {
   }
   bar.hidden = false;
   bar.querySelector('#feedSubmit').textContent = T().submit;
-  buildRail(cards);                      // 题号条住在底栏里，得等它建好
+  railRender();                          // 题号条住在底栏里，得等它建好
 
   // 页面两侧的悬浮箭头：视线在卡片上时不用往下找底栏
   ['l', 'r'].forEach(side => {

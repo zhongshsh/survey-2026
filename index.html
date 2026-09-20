@@ -265,9 +265,10 @@
   .guide .g .t{font-size:13.5px; line-height:1.62; color:var(--ink2)}
   .guide .g .t b{color:var(--ink)}
 
-  /* 题号条：底部横排居中，既是进度也是导航 */
-  .feedrail{display:flex; justify-content:center; gap:4px; flex-wrap:nowrap;
-    overflow-x:auto; padding:2px 0 8px; scrollbar-width:thin}
+  /* 题号条：并在控制行中间，只显示当前题附近的一段 */
+  .feedrail{display:flex; align-items:center; gap:4px; flex-wrap:nowrap}
+  .feedrail .gap{font-family:"IBM Plex Mono",monospace; font-size:11px;
+    color:var(--ink3); padding:0 1px}
   .feedrail button{flex:0 0 auto; font-family:"IBM Plex Mono",monospace; font-size:11px;
     font-variant-numeric:tabular-nums; min-width:26px; padding:3px 0; border-radius:4px;
     border:1px solid var(--rule2); background:var(--card); color:var(--ink3);
@@ -294,9 +295,9 @@
     border-top:1px solid var(--rule);
     padding:10px 0 calc(10px + env(safe-area-inset-bottom,0px))}
   /* 底栏与 feed 对齐：同样的留槽规则，否则两者左右边界对不上 */
-  .feedbar .wrap{display:flex; flex-direction:column; gap:2px;
+  .feedbar .wrap{display:flex; flex-direction:column;
     width:min(100%, 1760px); max-width:none; padding-inline:16px}
-  .feedbar .ctl{display:flex; align-items:center; gap:12px}
+  .feedbar .ctl{display:flex; align-items:center; gap:12px; flex-wrap:wrap}
   @media (min-width:901px){ .feedbar .wrap{padding-inline:66px;} }
   .feedbar .cnt{font-family:"IBM Plex Mono",monospace; font-size:13px;
     font-variant-numeric:tabular-nums; white-space:nowrap}
