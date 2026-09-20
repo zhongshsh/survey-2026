@@ -54,6 +54,8 @@ const SURVEYS = {
     lang: 'zh',
     bank: 'items.idea-quality.json',
     part: 'B',
+    mode: 'feed',          // 连续信息流；judge 仍走一题一屏的分页
+
     minPerItem: 3,         // 读标题+摘要+schema，再给九项评分和一段风险描述
 
     title: 'Idea 质量评审',
@@ -435,6 +437,129 @@ function writeItem(node, ans) {
   });
 }
 
+/* ---------------------------------------------------------------- feed 模式 */
+
+/* Part B 有 32 题、每题要读一段摘要。一题一屏 + 「下一题」按钮会把它变成
+   32 次点击的表单苦役；连续信息流让人一路往下刷，答完一条自动滑到下一条。
+   judge 那份仍走分页 —— 它已经在收数据，渲染路径一个字节都不动。 */
+
+function feedCard(it, i) {
+  const seq = String(i + 1).padStart(2, '0');
+  const post = el('div', 'post');
+  post.dataset.item = it.id;
+  post.innerHTML = `
+    <div class="inner">
+      <div class="phead">
+        <span class="pseq">${seq}</span>
+        ${it.theme ? `<span class="ptag">${esc(it.theme)}</span>` : ''}
+        <span class="pdone">✓ done</span>
+      </div>
+      ${it.title ? `<h3>${esc(it.title)}</h3>` : ''}
+      ${it.abstract ? `<div class="abs clamped">${esc(it.abstract)}</div>
+                       <button class="more" type="button">展开全文</button>` : ''}
+      <details class="sch"><summary>结构化摘要</summary>
+        <div class="body">${fieldsHtml(it.schema)}</div></details>
+    </div>
+    <div class="rate">${renderB(it).right}</div>`;
+
+  const abs = post.querySelector('.abs');
+  const more = post.querySelector('.more');
+  if (more) {
+    more.addEventListener('click', () => {
+      more.textContent = abs.classList.toggle('clamped') ? '展开全文' : '收起';
+    });
+  }
+  return post;
+}
+
+function feedProgress() {
+  const done = S.order.filter(answered).length;
+  const n = S.order.length;
+  const fill = document.getElementById('feedFill');
+  if (fill) fill.style.width = `${(done / Math.max(1, n)) * 100}%`;
+  const cnt = document.getElementById('feedCnt');
+  if (cnt) cnt.textContent = `${done} / ${n}`;
+  const btn = document.getElementById('feedSubmit');
+  if (btn) btn.disabled = done < n;
+}
+
+/** 按问卷模式选渲染方式。judge = 分页，quality = 信息流。 */
+function renderSurvey() {
+  if (isFeed()) renderFeed(); else renderItem();
+}
+
+function renderFeed() {
+  const main = $('main');
+  main.classList.remove('wide');
+  $('nav').hidden = true;
+
+  const feed = el('div', 'feed');
+  const cards = new Map();
+  S.order.forEach((id, i) => {
+    const it = S.items.find(x => x.id === id);
+    if (!it) return;                      // 陌生题号略过，不拖垮整卷
+    const card = feedCard(it, i);
+    feed.appendChild(card);
+    cards.set(id, card);
+    writeItem(card, S.answers[id]);
+    if (answered(id)) card.classList.add('done');
+
+    const capture = () => {
+      const ans = readItem(card);
+      S.answers[id] = ans;
+      const ok = missingKeys('B', ans).length === 0;
+      const was = card.classList.contains('done');
+      card.classList.toggle('done', ok);
+      card.querySelectorAll('.missing').forEach(n => {
+        if (n.querySelector(':checked') || n.querySelector('textarea')?.value.trim()) {
+          n.classList.remove('missing');
+        }
+      });
+      Outbox.queue({ item_id: id, part: 'B', answer: ans,
+                     client_ts: new Date().toISOString(),
+                     elapsed_ms: Date.now() - (seenAt.get(id) || Date.now()) });
+      feedProgress();
+      // 刚答完就滑到下一条，省掉「下一题在哪」这一步
+      if (ok && !was) {
+        const nx = card.nextElementSibling;
+        if (nx) setTimeout(() => nx.scrollIntoView({ behavior: 'smooth', block: 'start' }), 280);
+      }
+    };
+    card.addEventListener('change', capture);
+    card.addEventListener('input', e => {
+      if (e.target.tagName === 'TEXTAREA') capture();
+    });
+  });
+  main.replaceChildren(feed);
+
+  // 进入视野才开始计时：32 张卡一次渲染，否则后面的耗时全是假的
+  if (window.IntersectionObserver) {
+    const io = new IntersectionObserver(es => es.forEach(e => {
+      const id = e.target.dataset.item;
+      if (e.isIntersecting && !seenAt.has(id)) seenAt.set(id, Date.now());
+    }), { threshold: 0.35 });
+    cards.forEach(c => io.observe(c));
+  }
+
+  let bar = document.getElementById('feedBar');
+  if (!bar) {
+    bar = el('div', 'feedbar');
+    bar.id = 'feedBar';
+    bar.innerHTML = `<div class="wrap">
+      <span class="cnt" id="feedCnt"></span>
+      <span class="rest"><i id="feedFill"></i></span>
+      <button class="primary" id="feedSubmit" disabled></button></div>`;
+    document.body.appendChild(bar);
+    bar.querySelector('#feedSubmit').addEventListener('click', () => $('btnFinish').click());
+  }
+  bar.hidden = false;
+  bar.querySelector('#feedSubmit').textContent = T().submit;
+
+  feedProgress();
+  const first = S.order.findIndex(id => !answered(id));
+  if (first > 0) cards.get(S.order[first])?.scrollIntoView({ block: 'start' });
+}
+
 /* ------------------------------------------------------------------ 界面 */
 
 /**
@@ -477,6 +602,12 @@ function syncRate(card) {
 }
 
 let shownAt = Date.now();
+// feed 模式下 32 张卡一次性渲染，得按「进入视野」各自计时
+const seenAt = new Map();
+
+function isFeed() {
+  return (SURVEYS[S.survey] || {}).mode === 'feed';
+}
 
 function renderItem() {
   const id = S.order[S.idx];
@@ -570,8 +701,8 @@ function updateProgress() {
 }
 
 /** 把缺的项标红并滚到第一个。只在用户试图前进时调用，不在作答过程中骚扰。 */
-function flagMissing(keys) {
-  const body = document.getElementById('itemBody');
+function flagMissing(keys, scope) {
+  const body = scope || document.getElementById('itemBody');
   if (!body) return;
   body.querySelectorAll('.missing').forEach(n => n.classList.remove('missing'));
   let first = null;
@@ -600,6 +731,8 @@ function formSize() {
 function showJoin(msg) {
   $('nav').hidden = true;
   $('main').classList.remove('wide');
+  const fb = document.getElementById('feedBar');
+  if (fb) fb.hidden = true;
   const cfg = SURVEYS[S.survey] || SURVEYS.judge;
   const t = T();
   const p = el('div', 'panel');
@@ -623,7 +756,7 @@ function showJoin(msg) {
   $('joinGo').addEventListener('click', async () => {
     $('joinGo').disabled = true;
     const name = $('nameIn').value.trim();
-    if (PREVIEW) { S.code = 'PREVIEW'; showPid(); S.idx = 0; renderItem(); return; }
+    if (PREVIEW) { S.code = 'PREVIEW'; showPid(); S.idx = 0; renderSurvey(); return; }
     try {
       // forms 非空时由后端轮转分配其中一份；前端只把候选交上去
       const r = await apiPost({ action: 'join', survey: S.survey, name,
@@ -688,6 +821,8 @@ function recallPid(survey) {
 function showFatal(msg) {
   $('nav').hidden = true;
   $('main').classList.remove('wide');
+  const fb = document.getElementById('feedBar');
+  if (fb) fb.hidden = true;
   const t = T();
   $('main').replaceChildren(el('div', 'panel',
     `<h2>${t.errTitle}</h2><p>${esc(msg)}</p><p>${t.errBody}</p>`));
@@ -696,6 +831,8 @@ function showFatal(msg) {
 function showThanks() {
   $('nav').hidden = true;
   $('main').classList.remove('wide');
+  const fb = document.getElementById('feedBar');
+  if (fb) fb.hidden = true;
   const t = T();
   const p = el('div', 'panel');
   p.innerHTML = `<h2>${t.thanks}</h2>
@@ -786,7 +923,7 @@ async function boot() {
   // 续答落到第一道没答的题
   const first = S.order.findIndex(id => !answered(id));
   S.idx = first < 0 ? 0 : first;
-  renderItem();
+  renderSurvey();
 }
 
 $('btnPrev').addEventListener('click', () => { if (S.idx > 0) { S.idx--; renderItem(); } });
@@ -797,16 +934,27 @@ $('btnNext').addEventListener('click', () => {
   if (S.idx < S.order.length - 1) { S.idx++; renderItem(); }
 });
 $('btnFinish').addEventListener('click', async () => {
-  const cur = S.order[S.idx];
-  const curMiss = missingKeys(partOf(cur), S.answers[cur]);
-  if (curMiss.length) { flagMissing(curMiss); return; }
   const incomplete = S.order.filter(id => !answered(id));
-  if (incomplete.length) {                       // 别的题还没答完，跳过去
+  if (incomplete.length) {
     alert(T().unfinished(incomplete.length));
-    S.idx = S.order.indexOf(incomplete[0]);
-    renderItem();
-    flagMissing(missingKeys(partOf(incomplete[0]), S.answers[incomplete[0]]));
+    const first = incomplete[0];
+    if (isFeed()) {
+      const card = document.querySelector(`.post[data-item="${CSS.escape(first)}"]`);
+      if (card) {
+        card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        flagMissing(missingKeys('B', S.answers[first]), card);
+      }
+    } else {
+      S.idx = S.order.indexOf(first);
+      renderItem();
+      flagMissing(missingKeys(partOf(first), S.answers[first]));
+    }
     return;
+  }
+  if (!isFeed()) {
+    const cur = S.order[S.idx];
+    const curMiss = missingKeys(partOf(cur), S.answers[cur]);
+    if (curMiss.length) { flagMissing(curMiss); return; }
   }
   if (PREVIEW) { showThanks(); return; }
   await Outbox.flush();
