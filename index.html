@@ -235,6 +235,20 @@
   .qline .scale{flex:0 1 auto}
   .qline .scale label{padding:4px 8px; font-size:12px; min-width:34px}
 
+  /* 开头的评审说明。不是题目，样式上要和卡片明确区分 */
+  .guide{background:var(--card); border:1px solid var(--rule2); border-radius:10px;
+    box-shadow:var(--shadow); margin-bottom:22px; padding:20px 24px;
+    border-left:3px solid var(--accent)}
+  .guide h2{font-family:"IBM Plex Serif",Georgia,serif; font-size:19px; margin:0 0 4px}
+  .guide .lead{color:var(--ink2); font-size:13.5px; margin:0 0 14px}
+  .guide .g{display:flex; gap:12px; padding:11px 0; border-top:1px solid var(--rule)}
+  .guide .g .n{flex:0 0 auto; font-family:"IBM Plex Mono",monospace; font-size:10.5px;
+    font-weight:600; letter-spacing:.09em; text-transform:uppercase; color:var(--accent);
+    background:var(--accent-soft); border-radius:3px; padding:2px 7px; height:fit-content;
+    white-space:nowrap}
+  .guide .g .t{font-size:13.5px; line-height:1.62; color:var(--ink2)}
+  .guide .g .t b{color:var(--ink)}
+
   /* 左侧题号条：填好变绿，点一下跳过去 */
   .feedrail{position:fixed; left:10px; top:50%; transform:translateY(-50%); z-index:25;
     display:flex; flex-direction:column; gap:4px; max-height:78vh; overflow-y:auto;
