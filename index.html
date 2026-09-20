@@ -13,7 +13,7 @@
     --ink:#15181d; --ink2:#464c57; --ink3:#727a88;
     --rule:#d7dbe2; --rule2:#c2c8d2;
     --accent:#3a4fa0; --accent-soft:#e6e9f6;
-    --warn:#a8630f; --good:#17705f;
+    --warn:#a8630f; --good:#17705f; --good-soft:#dff0eb;
     --a-side:#3a4fa0; --b-side:#8a4a86;
     --shadow:0 1px 2px rgba(21,24,29,.06), 0 6px 18px rgba(21,24,29,.05);
   }
@@ -22,7 +22,7 @@
     --ink:#e8eaee; --ink2:#b1b8c4; --ink3:#828b9a;
     --rule:#2a313c; --rule2:#39424f;
     --accent:#93a5ee; --accent-soft:#222a44;
-    --warn:#e0a45c; --good:#61c9b1;
+    --warn:#e0a45c; --good:#61c9b1; --good-soft:#17332e;
     --a-side:#93a5ee; --b-side:#d093cb;
     --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px rgba(0,0,0,.3);
   }}
@@ -31,7 +31,7 @@
     --ink:#e8eaee; --ink2:#b1b8c4; --ink3:#828b9a;
     --rule:#2a313c; --rule2:#39424f;
     --accent:#93a5ee; --accent-soft:#222a44;
-    --warn:#e0a45c; --good:#61c9b1;
+    --warn:#e0a45c; --good:#61c9b1; --good-soft:#17332e;
     --a-side:#93a5ee; --b-side:#d093cb;
     --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px rgba(0,0,0,.3);
   }
@@ -309,7 +309,9 @@
   /* 底栏与 feed 对齐：同样的留槽规则，否则两者左右边界对不上 */
   .feedbar .wrap{display:flex; flex-direction:column;
     width:min(100%, 1760px); max-width:none; padding-inline:16px}
-  .feedbar .ctl{display:flex; align-items:center; gap:12px; flex-wrap:wrap}
+  /* 底栏永远一行：题号条自己横向滚动，其余元素不许被挤到第二行 */
+  .feedbar .ctl{display:flex; align-items:center; gap:12px; flex-wrap:nowrap}
+  .feedbar .ctl > :not(#railHost){flex:0 0 auto}
   @media (min-width:901px){ .feedbar .wrap{padding-inline:66px;} }
   .feedbar .cnt{font-family:"IBM Plex Mono",monospace; font-size:13px;
     font-variant-numeric:tabular-nums; white-space:nowrap}
