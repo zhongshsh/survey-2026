@@ -494,20 +494,12 @@ function feedCard(it, i) {
         <span class="pdone">✓ done</span>
       </div>
       ${it.title ? `<h3>${esc(it.title)}</h3>` : ''}
-      ${it.abstract ? `<div class="abs">${esc(it.abstract)}</div>
-                       <button class="more" type="button">Show less</button>` : ''}
+      ${it.abstract ? `<div class="abs">${esc(it.abstract)}</div>` : ''}
       <details class="sch"><summary>Structured summary</summary>
         <div class="body">${fieldsHtml(it.schema)}</div></details>
     </div>
     <div class="rate">${renderB(it).right}</div>`;
 
-  const abs = post.querySelector('.abs');
-  const more = post.querySelector('.more');
-  if (more) {
-    more.addEventListener('click', () => {
-      more.textContent = abs.classList.toggle('clamped') ? 'Show more' : 'Show less';
-    });
-  }
   return post;
 }
 
