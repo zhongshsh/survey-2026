@@ -452,26 +452,43 @@ function renderB(it) {
 
 /* -------------------------------------------------------------- 答案读写 */
 
+/* feed 里 32 张卡同时在 DOM 中，而单选按钮是**按 name 在整个文档内**分组的。
+   不加前缀的话，在第 5 张卡点 Soundness 会把第 2 张卡的 Soundness 取消掉；
+   刷新回填同理，后写的顶掉先写的，最后只剩一张卡显示有值。
+   所以 DOM 上的 name 带 "<题号>::" 前缀，读写时再剥掉。分页模式没有前缀，
+   逻辑对两边通用。 */
+const NS = '::';
+const nsKey = (n) => (n.includes(NS) ? n.slice(n.indexOf(NS) + NS.length) : n);
+
+function namespaceInputs(node, id) {
+  node.querySelectorAll('[name]').forEach(i => {
+    if (!i.name.includes(NS)) i.name = id + NS + i.name;
+  });
+}
+
 function readItem(node) {
   const out = {};
-  node.querySelectorAll('input[type=radio]:checked').forEach(i => { out[i.name] = i.value; });
+  node.querySelectorAll('input[type=radio]:checked').forEach(i => {
+    out[nsKey(i.name)] = i.value;
+  });
   node.querySelectorAll('input[type=checkbox]:checked').forEach(i => {
-    (out[i.name] = out[i.name] || []).push(i.value);
+    const k = nsKey(i.name);
+    (out[k] = out[k] || []).push(i.value);
   });
   node.querySelectorAll('textarea, input[type=text]').forEach(i => {
-    if (i.value.trim()) out[i.name] = i.value.trim();
+    if (i.value.trim()) out[nsKey(i.name)] = i.value.trim();
   });
   return out;
 }
 
 function writeItem(node, ans) {
   if (!ans) return;
-  Object.entries(ans).forEach(([name, val]) => {
+  node.querySelectorAll('[name]').forEach(i => {
+    const val = ans[nsKey(i.name)];
+    if (val === undefined) return;
     const vals = Array.isArray(val) ? val.map(String) : [String(val)];
-    node.querySelectorAll(`[name="${CSS.escape(name)}"]`).forEach(i => {
-      if (i.type === 'radio' || i.type === 'checkbox') i.checked = vals.includes(i.value);
-      else i.value = val;
-    });
+    if (i.type === 'radio' || i.type === 'checkbox') i.checked = vals.includes(i.value);
+    else i.value = val;
   });
 }
 
@@ -500,7 +517,46 @@ function feedCard(it, i) {
     </div>
     <div class="rate">${renderB(it).right}</div>`;
 
+  namespaceInputs(post, it.id);     // 必须在挂进文档前做，否则短暂串组
   return post;
+}
+
+/** 左侧题号条：一格一题，填好变绿，点一下跳过去。 */
+function buildRail(cards) {
+  let rail = document.getElementById('feedRail');
+  if (rail) rail.remove();
+  rail = el('div', 'feedrail');
+  rail.id = 'feedRail';
+  S.order.forEach((id, i) => {
+    const b = el('button', null, String(i + 1).padStart(2, '0'));
+    b.type = 'button';
+    b.dataset.item = id;
+    b.title = `#${i + 1}`;
+    b.addEventListener('click', () => {
+      cards.get(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+    rail.appendChild(b);
+  });
+  document.body.appendChild(rail);
+}
+
+function railSync() {
+  const rail = document.getElementById('feedRail');
+  if (!rail) return;
+  rail.querySelectorAll('button').forEach(b => {
+    b.classList.toggle('done', answered(b.dataset.item));
+  });
+}
+
+/** 当前看的是哪一题，题号条上高亮它。 */
+function railHere(id) {
+  const rail = document.getElementById('feedRail');
+  if (!rail) return;
+  rail.querySelectorAll('button').forEach(b => {
+    const on = b.dataset.item === id;
+    b.classList.toggle('here', on);
+    if (on) b.scrollIntoView({ block: 'nearest' });
+  });
 }
 
 function feedProgress() {
@@ -512,6 +568,7 @@ function feedProgress() {
   if (cnt) cnt.textContent = `${done} / ${n}`;
   const btn = document.getElementById('feedSubmit');
   if (btn) btn.disabled = done < n;
+  railSync();
 }
 
 /** 按问卷模式选渲染方式。judge = 分页，quality = 信息流。 */
@@ -564,11 +621,16 @@ function renderFeed() {
   });
   main.replaceChildren(feed);
 
-  // 进入视野才开始计时：32 张卡一次渲染，否则后面的耗时全是假的
+  buildRail(cards);
+
+  // 进入视野才开始计时：32 张卡一次渲染，否则后面的耗时全是假的。
+  // 同一个观察器顺带把题号条的「当前题」高亮出来。
   if (window.IntersectionObserver) {
     const io = new IntersectionObserver(es => es.forEach(e => {
       const id = e.target.dataset.item;
-      if (e.isIntersecting && !seenAt.has(id)) seenAt.set(id, Date.now());
+      if (!e.isIntersecting) return;
+      if (!seenAt.has(id)) seenAt.set(id, Date.now());
+      railHere(id);
     }), { threshold: 0.35 });
     cards.forEach(c => io.observe(c));
   }
@@ -764,6 +826,7 @@ function formSize() {
 function showJoin(msg) {
   $('nav').hidden = true;
   $('main').classList.remove('wide', 'feedmode');
+  document.getElementById('feedRail')?.remove();
   const fb = document.getElementById('feedBar');
   if (fb) fb.hidden = true;
   const cfg = SURVEYS[S.survey] || SURVEYS.judge;
@@ -977,6 +1040,7 @@ function recallPid(survey) {
 function showFatal(msg) {
   $('nav').hidden = true;
   $('main').classList.remove('wide', 'feedmode');
+  document.getElementById('feedRail')?.remove();
   const fb = document.getElementById('feedBar');
   if (fb) fb.hidden = true;
   const t = T();
@@ -987,6 +1051,7 @@ function showFatal(msg) {
 function showThanks() {
   $('nav').hidden = true;
   $('main').classList.remove('wide', 'feedmode');
+  document.getElementById('feedRail')?.remove();
   const fb = document.getElementById('feedBar');
   if (fb) fb.hidden = true;
   const t = T();
