@@ -754,6 +754,7 @@ function showJoin(msg) {
     </details>`;
   $('main').replaceChildren(p);
 
+  if (cfg.profile) wireProfileOther($('profile'));
   $('nameIn').addEventListener('keydown', e => { if (e.key === 'Enter') $('joinGo').click(); });
   $('joinGo').addEventListener('click', async () => {
     $('joinGo').disabled = true;
@@ -766,13 +767,16 @@ function showJoin(msg) {
         $('joinGo').disabled = false;
         root.querySelectorAll('.prow').forEach(n => n.classList.remove('missing'));
         miss.forEach(k => {
-          const el0 = root.querySelector(`[name="${k}"]`) || $('areasOther');
+          const el0 = root.querySelector(`[name="${k}"]`) ||
+                      document.getElementById(k === 'position_other'
+                        ? 'positionOther' : 'areasOther');
           el0?.closest('.prow')?.classList.add('missing');
         });
         return;
       }
       profile = {
         position: root.querySelector('input[name="position"]:checked').value,
+        position_other: root.querySelector('#positionOther')?.value.trim() || '',
         review_exp: root.querySelector('input[name="review_exp"]:checked').value,
         areas: [...root.querySelectorAll('input[name="areas"]:checked')].map(i => i.value),
         areas_other: root.querySelector('#areasOther').value.trim(),
@@ -805,6 +809,7 @@ function showJoin(msg) {
 const PROFILE = {
   position: {
     label: 'Your position',
+    other: true,                 // 选 Other 必须写清楚，否则这一档等于没信息
     opts: [['phd', 'PhD student'], ['postdoc', 'Postdoc'],
            ['faculty', 'Faculty'], ['industry', 'Industry researcher'],
            ['other', 'Other']],
@@ -828,7 +833,9 @@ function profileHtml() {
     <div class="prow"><div class="plab">${cfg.label}</div>
       <div class="popts">${cfg.opts.map(([v, t]) =>
         `<label class="opt"><input type="radio" name="${key}" value="${v}"> ${esc(t)}</label>`
-      ).join('')}</div></div>`;
+      ).join('')}${cfg.other
+        ? `<input type="text" id="${key}Other" placeholder="please specify"
+                  maxlength="120" style="max-width:220px" hidden>` : ''}</div></div>`;
   return `
     ${grp('position', PROFILE.position)}
     ${grp('review_exp', PROFILE.review_exp)}
@@ -839,7 +846,24 @@ function profileHtml() {
       ).join('')}
       <label class="opt"><input type="checkbox" name="areas" value="other"> Other</label>
       <input type="text" id="areasOther" placeholder="which area?" maxlength="120"
-             style="max-width:260px"></div></div>`;
+             style="max-width:260px" hidden></div></div>`;
+}
+
+/** 只有选了 Other 才露出填写框。平时挂着一个空输入框，既占地方又像必填。 */
+function wireProfileOther(root) {
+  const pairs = [
+    ['input[name="position"]', 'positionOther', i => i.value === 'other' && i.checked],
+    ['input[name="areas"][value="other"]', 'areasOther', i => i.checked],
+  ];
+  const sync = () => pairs.forEach(([sel, id, on]) => {
+    const box = document.getElementById(id);
+    if (!box) return;
+    const show = [...root.querySelectorAll(sel)].some(on);
+    box.hidden = !show;
+    if (!show) box.value = '';          // 收起时清掉，免得留下不该提交的残值
+  });
+  root.addEventListener('change', sync);
+  sync();
 }
 
 /** 背景问题填全了没。没填全就不放行 —— 事后没法补问。 */
@@ -848,6 +872,10 @@ function profileMissing(root) {
   ['position', 'review_exp'].forEach(k => {
     if (!root.querySelector(`input[name="${k}"]:checked`)) miss.push(k);
   });
+  const pos = root.querySelector('input[name="position"]:checked');
+  if (pos && pos.value === 'other' && !root.querySelector('#positionOther').value.trim()) {
+    miss.push('position_other');
+  }
   const areas = [...root.querySelectorAll('input[name="areas"]:checked')].map(i => i.value);
   if (!areas.length) miss.push('areas');
   if (areas.includes('other') && !root.querySelector('#areasOther').value.trim()) {
