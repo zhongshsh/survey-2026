@@ -102,10 +102,14 @@
   .colhead{font-family:"IBM Plex Mono",monospace; font-size:12px; font-weight:600;
     letter-spacing:.1em; border-bottom:1px solid var(--rule); padding-bottom:6px; margin-bottom:10px}
   .col.a .colhead{color:var(--a-side)} .col.b .colhead{color:var(--b-side)}
-  .fld{margin-bottom:13px}
-  .fld .k{font-family:"IBM Plex Mono",monospace; font-size:10.5px; letter-spacing:.09em;
-    text-transform:uppercase; color:var(--ink3); display:block; margin-bottom:2px}
-  .fld .v{font-size:13.5px; line-height:1.55}
+  /* 字段名是读长 schema 时的路标 —— 之前是浅灰小字，扫一眼全糊在一起。
+     现在给它实底色块、加重字重、拉开与正文的间距。 */
+  .fld{margin-bottom:16px}
+  .fld .k{display:inline-block; font-family:"IBM Plex Mono",monospace;
+    font-size:10.5px; font-weight:600; letter-spacing:.1em; text-transform:uppercase;
+    color:var(--accent); background:var(--accent-soft);
+    border-radius:3px; padding:2px 7px; margin-bottom:6px}
+  .fld .v{font-size:13.5px; line-height:1.58; padding-left:1px}
   .fld ul{margin:0; padding-left:1.1em} .fld li{margin-bottom:3px}
 
   .rate .ans{margin-top:16px; padding-top:13px}
@@ -124,8 +128,10 @@
   /* 未填项：点「下一题」时才亮，改完即灭 */
   .missing{outline:2px solid #c0392b; outline-offset:2px; border-radius:4px}
   .missing .fname,.missing .q{color:#c0392b}
-  .fieldq .fname{font-family:"IBM Plex Mono",monospace; font-size:11px; letter-spacing:.06em;
-    text-transform:uppercase; color:var(--ink3); display:block; margin-bottom:4px}
+  .fieldq .fname{display:inline-block; font-family:"IBM Plex Mono",monospace;
+    font-size:10.5px; font-weight:600; letter-spacing:.1em; text-transform:uppercase;
+    color:var(--accent); background:var(--accent-soft);
+    border-radius:3px; padding:2px 7px; margin-bottom:6px}
   .fieldq .opts{display:flex; gap:12px; flex-wrap:wrap}
 
   table.grid{width:100%; border-collapse:collapse; font-size:13.5px}
