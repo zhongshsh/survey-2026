@@ -15,7 +15,7 @@ window.SURVEY_CONFIG = {
   ENDPOINTS: {
     // 已冻结，发布后不要再动这个部署
     judge: 'https://script.google.com/macros/s/AKfycbxVZdYQpD28_-fPi38-ELO7zEVBi86Zib5ksQM9StTpyjHI6t-m76KEj2KyS0Wao0RV_w/exec',
-    // 迭代中：新建一个独立的 Apps Script + Spreadsheet，把 /exec 填进来
-    quality: '',
+    // 迭代中，独立的 Apps Script + Spreadsheet，改它不影响 judge
+    quality: 'https://script.google.com/macros/s/AKfycbxY1RTD3rz-b-PSXYdBdhjr0T7iQLHjEgdSANUrgb4N4Obz04xxBs3EHPZqULEdZ0q-BA/exec',
   },
 };
