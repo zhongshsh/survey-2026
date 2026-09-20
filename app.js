@@ -394,7 +394,7 @@ function renderB(it) {
 
   const right = `
     <div class="ans">
-      <h4>Review dimensions · ICLR 2026 scale (1–4)</h4>
+      <h4>Review dimensions · scale (1–4)</h4>
       <div class="row"><div class="q"><b>Soundness</b>
         <small>The soundness of the technical claims, experimental and research
           methodology, and whether the central claims are adequately supported
