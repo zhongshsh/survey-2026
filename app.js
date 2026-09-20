@@ -37,9 +37,8 @@ const SURVEYS = {
     minPerItem: 0.75,      // 每题 3 格逐字段 + 整体 + 把握度，纯点选
 
     title: 'Same-Idea Judgement',
-    blurb: 'Each item shows two anonymized research idea schemas. Decide whether they ' +
-           'describe the same core idea. We are measuring how human judgement compares ' +
-           'with an automated judge, so there is <b>no answer key</b> — apply your own standard.',
+    blurb: 'We are measuring how human judgement compares with an automated judge, ' +
+           'so there is <b>no answer key</b> — apply your own standard.',
   },
   quality: {
     lang: 'zh',
