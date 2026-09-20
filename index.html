@@ -257,6 +257,10 @@
     display:flex; flex-direction:column; gap:4px; max-height:78vh; overflow-y:auto;
     padding:8px 6px; background:var(--card); border:1px solid var(--rule);
     border-radius:8px; box-shadow:var(--shadow); scrollbar-width:thin}
+  .feedrail .rhead{position:sticky; top:0; z-index:1; background:var(--card);
+    font-family:"IBM Plex Mono",monospace; font-size:10.5px; color:var(--ink3);
+    text-align:center; padding:2px 0 6px; margin-bottom:2px;
+    border-bottom:1px solid var(--rule); font-variant-numeric:tabular-nums}
   .feedrail button{font-family:"IBM Plex Mono",monospace; font-size:11px;
     font-variant-numeric:tabular-nums; width:30px; padding:4px 0; border-radius:4px;
     border:1px solid var(--rule2); background:var(--card); color:var(--ink3);
@@ -277,19 +281,15 @@
   .feedbar .cnt{font-family:"IBM Plex Mono",monospace; font-size:13px;
     font-variant-numeric:tabular-nums; white-space:nowrap}
   .feedbar button.pg{padding:6px 11px; font-size:13px}
-  .feedbar .sel{display:flex; align-items:center; gap:6px; font-size:12.5px;
-    color:var(--ink3); white-space:nowrap}
-  .feedbar select{font-family:inherit; font-size:12.5px; padding:4px 6px;
-    border:1px solid var(--rule2); border-radius:4px; background:var(--card);
-    color:var(--ink)}
   .feedbar .sv{font-size:12.5px; white-space:nowrap}
   .feedbar .sv[data-s="saved"]{color:var(--good)}
   .feedbar .sv[data-s="saving"]{color:var(--warn)}
   .feedbar .sv[data-s="offline"]{color:#c0392b}
-  @media (max-width:720px){ .feedbar .sel{display:none} }
-  .feedbar .rest{flex:1; height:4px; background:var(--sunk); border-radius:2px; overflow:hidden}
-  .feedbar .rest > i{display:block; height:100%; width:0; background:var(--good);
-    transition:width .3s}
+
+  .feedbar .grow{flex:1}
+  /* 进度看左边的题号条；题号条在窄屏收起，那时底栏才补一个计数 */
+  .feedbar .narrowonly{display:none}
+  @media (max-width:1180px){ .feedbar .narrowonly{display:inline} }
 
   /* ---- footer nav ---- */
   .nav{position:fixed; left:0; right:0; bottom:0; z-index:20; background:var(--card);

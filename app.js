@@ -33,7 +33,7 @@ const S = {
   code: null, items: [], order: [], meta: {},
   answers: {}, idx: 0, finished: false,
   survey: 'judge', surveyTitle: '',
-  page: 0, pageSize: 1,
+  page: 0,
   // 交完之后点「重新填一份」时置真：下一次 join 不按名字接续，一定新建
   fresh: false,
 };
@@ -526,34 +526,18 @@ function feedCard(it, i) {
   return post;
 }
 
-/* 分页。默认一次一题 —— 32 张长卡连着刷，很容易漏掉中间某张没答完。
-   卡片全部渲染、只切换显隐：这样答案、题号隔离、已答状态都不用重建。 */
-const PAGE_SIZES = [1, 2, 5, 10, 0];       // 0 = 全部
+/* 一页一篇。卡片全部渲染、只切换显隐：答案、题号隔离、已答状态都不用重建。
+   进度不再用底部的条，改看左边的题号条 —— 那里本来就一格一题、答完变绿，
+   既是进度也是导航，比一根条多出「哪几题还没答」这个信息。 */
+const pageCount = () => Math.max(1, S.order.length);
+const pageOf = (idx) => Math.max(0, idx);
 
-function pageSizeGet() {
-  try {
-    const v = parseInt(localStorage.getItem('pagesize:' + S.survey), 10);
-    if (PAGE_SIZES.includes(v)) return v;
-  } catch (e) { /* 存不下就用默认 */ }
-  return 1;
-}
-function pageSizeSet(v) {
-  S.pageSize = v;
-  try { localStorage.setItem('pagesize:' + S.survey, String(v)); } catch (e) { /* 同上 */ }
-}
-const pageCount = () =>
-  S.pageSize ? Math.max(1, Math.ceil(S.order.length / S.pageSize)) : 1;
-const pageOf = (idx) => (S.pageSize ? Math.floor(idx / S.pageSize) : 0);
-
-/** 只显示当前页的卡片。翻页前把待写队列冲掉，别让答案压在本地。 */
+/** 切到第 p 篇。切之前把待写队列冲掉，别让答案压在本地。 */
 function showPage(p, opts) {
-  const n = pageCount();
-  S.page = Math.max(0, Math.min(p, n - 1));
-  const lo = S.pageSize ? S.page * S.pageSize : 0;
-  const hi = S.pageSize ? lo + S.pageSize : S.order.length;
+  S.page = Math.max(0, Math.min(p, pageCount() - 1));
   S.order.forEach((id, i) => {
     const c = document.querySelector(`.post[data-item="${CSS.escape(id)}"]`);
-    if (c) c.hidden = !(i >= lo && i < hi);
+    if (c) c.hidden = i !== S.page;
   });
   pageNavSync();
   if (!(opts && opts.keepScroll)) window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -561,17 +545,13 @@ function showPage(p, opts) {
 }
 
 function pageNavSync() {
-  const n = pageCount();
   const lab = document.getElementById('pgLabel');
-  if (lab) {
-    lab.textContent = S.pageSize === 1
-      ? `${S.page + 1} / ${S.order.length}`
-      : `page ${S.page + 1} / ${n}`;
-  }
+  if (lab) lab.textContent = `${S.page + 1} / ${S.order.length}`;
   const prev = document.getElementById('pgPrev');
   const next = document.getElementById('pgNext');
   if (prev) prev.disabled = S.page === 0;
-  if (next) next.disabled = S.page >= n - 1;
+  if (next) next.disabled = S.page >= pageCount() - 1;
+  railHere(S.order[S.page]);
 }
 
 /* 开头的评审说明。放在所有卡片之前，讲清三件事：评什么、三个板块各自的依据、
@@ -644,6 +624,9 @@ function buildRail(cards) {
   if (rail) rail.remove();
   rail = el('div', 'feedrail');
   rail.id = 'feedRail';
+  const head = el('div', 'rhead');
+  head.id = 'railCount';
+  rail.appendChild(head);
   S.order.forEach((id, i) => {
     const b = el('button', null, String(i + 1).padStart(2, '0'));
     b.type = 'button';
@@ -680,10 +663,11 @@ function railHere(id) {
 function feedProgress() {
   const done = S.order.filter(answered).length;
   const n = S.order.length;
-  const fill = document.getElementById('feedFill');
-  if (fill) fill.style.width = `${(done / Math.max(1, n)) * 100}%`;
+  // 窄屏题号条会收起，那时底栏补一个计数；宽屏交给题号条
   const cnt = document.getElementById('feedCnt');
   if (cnt) cnt.textContent = `${done} / ${n}`;
+  const rc = document.getElementById('railCount');
+  if (rc) rc.textContent = `${done}/${n}`;
   const btn = document.getElementById('feedSubmit');
   if (btn) btn.disabled = done < n;
   railSync();
@@ -695,7 +679,6 @@ function renderSurvey() {
 }
 
 function renderFeed() {
-  S.pageSize = pageSizeGet();
   const main = $('main');
   main.classList.remove('wide');
   main.classList.add('feedmode');      // 交出宽度控制权，由 .feed 自己居中
@@ -728,16 +711,8 @@ function renderFeed() {
                      elapsed_ms: Date.now() - (seenAt.get(id) || Date.now()) });
       feedProgress();
       // 刚答完就前进。一次一题时翻页，一页多题时滚到下一张。
-      if (ok && !was) {
-        setTimeout(() => {
-          if (S.pageSize === 1) {
-            if (S.page < pageCount() - 1) showPage(S.page + 1);
-          } else {
-            let nx = card.nextElementSibling;
-            while (nx && nx.hidden) nx = nx.nextElementSibling;
-            if (nx) nx.scrollIntoView({ behavior: 'smooth', block: 'start' });
-          }
-        }, 320);
+      if (ok && !was && S.page < pageCount() - 1) {
+        setTimeout(() => showPage(S.page + 1), 320);
       }
     };
     card.addEventListener('change', capture);
@@ -769,12 +744,9 @@ function renderFeed() {
       <button class="pg" id="pgPrev" type="button">←</button>
       <span class="cnt" id="pgLabel"></span>
       <button class="pg" id="pgNext" type="button">→</button>
-      <span class="rest"><i id="feedFill"></i></span>
-      <span class="cnt" id="feedCnt"></span>
+      <span class="grow"></span>
+      <span class="cnt narrowonly" id="feedCnt"></span>
       <span class="sv" id="feedSave"></span>
-      <span class="sel"><label for="pgSize">per page</label>
-        <select id="pgSize">${PAGE_SIZES.map(v =>
-          `<option value="${v}">${v || 'all'}</option>`).join('')}</select></span>
       <button class="pg" id="pgGuide" type="button" title="Guidelines">?</button>
       <button class="primary" id="feedSubmit" disabled></button></div>`;
     document.body.appendChild(bar);
@@ -782,15 +754,9 @@ function renderFeed() {
     bar.querySelector('#pgGuide').addEventListener('click', () => showGuide(renderSurvey));
     bar.querySelector('#pgPrev').addEventListener('click', () => showPage(S.page - 1));
     bar.querySelector('#pgNext').addEventListener('click', () => showPage(S.page + 1));
-    bar.querySelector('#pgSize').addEventListener('change', (e) => {
-      const first = S.pageSize ? S.page * S.pageSize : 0;   // 停在原来那一题上
-      pageSizeSet(parseInt(e.target.value, 10));
-      showPage(pageOf(first));
-    });
   }
   bar.hidden = false;
   bar.querySelector('#feedSubmit').textContent = T().submit;
-  bar.querySelector('#pgSize').value = String(S.pageSize);
 
   feedProgress();
   // 续答时直接落到第一道没答完的题所在的页
@@ -1332,6 +1298,16 @@ $('btnFinish').addEventListener('click', async () => {
   try { await apiPost({ action: 'finish', detail: { n_items: S.order.length } }); }
   catch (e) { alert(T().submitFail + e.message); return; }
   showThanks();
+});
+
+// 左右方向键翻篇。焦点在输入框里时不接管 —— 那时方向键该归输入框用。
+document.addEventListener('keydown', (e) => {
+  if (!isFeed() || !document.getElementById('feedBar') ||
+      document.getElementById('feedBar').hidden) return;
+  const t = e.target;
+  if (t && /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName)) return;
+  if (e.key === 'ArrowLeft') { e.preventDefault(); showPage(S.page - 1); }
+  if (e.key === 'ArrowRight') { e.preventDefault(); showPage(S.page + 1); }
 });
 
 window.addEventListener('resize', () => {
