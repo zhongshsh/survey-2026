@@ -186,12 +186,14 @@
   .prow .popts{display:flex; flex-wrap:wrap; gap:8px 18px; align-items:center}
 
   /* ---- feed 模式：Part B 的沉浸式信息流 ---- */
-  .feed{max-width:1240px; margin:0 auto; padding-block:8px 120px}
+  /* 跟着屏幕走：小屏吃满宽度，大屏留边，超宽屏封顶免得一行拉到一百多字符 */
+  .feed{width:min(94vw, 1760px); margin:0 auto; padding-block:8px 120px}
   /* 一张卡 = 一条 idea，卡内左右分栏：左读内容，右打分，视线不用上下折返 */
   .post{background:var(--card); border:1px solid var(--rule2); border-radius:10px;
     box-shadow:var(--shadow); margin-bottom:18px; overflow:hidden;
     border-left:3px solid transparent; transition:border-left-color .25s;
-    display:grid; grid-template-columns:minmax(0,1fr) 400px}
+    /* 评分栏随屏幕微涨，但有上下限：太窄刻度会换行，太宽白占地方 */
+    display:grid; grid-template-columns:minmax(0,1fr) clamp(340px, 24vw, 460px)}
   @media (max-width:1040px){ .post{grid-template-columns:1fr} }
   .post.done{border-left-color:var(--good)}
   .post > .inner{padding:18px 20px; min-width:0}
@@ -205,7 +207,9 @@
   .post.done .pdone{opacity:1}
   .post h3{font-family:"IBM Plex Serif",Georgia,serif; font-size:20px; font-weight:600;
     line-height:1.3; margin:0 0 10px}
-  .post .abs{font-size:14px; line-height:1.7; color:var(--ink)}
+  /* 卡片可以很宽，正文不能：行宽超过约 90 字符，眼睛回行就开始丢行 */
+  .post .abs{font-size:14px; line-height:1.7; color:var(--ink); max-width:88ch}
+  .post h3{max-width:52ch}
   .post .abs.clamped{display:-webkit-box; -webkit-line-clamp:9; -webkit-box-orient:vertical;
     overflow:hidden}
   .post .more{background:none; border:none; padding:4px 0; font-size:12.5px;
@@ -235,7 +239,8 @@
   .feedbar{position:fixed; left:0; right:0; bottom:0; z-index:30; background:var(--card);
     border-top:1px solid var(--rule);
     padding:10px 0 calc(10px + env(safe-area-inset-bottom,0px))}
-  .feedbar .wrap{display:flex; align-items:center; gap:12px; max-width:1240px}
+  .feedbar .wrap{display:flex; align-items:center; gap:12px;
+    width:min(94vw, 1760px); max-width:none}
   .feedbar .cnt{font-family:"IBM Plex Mono",monospace; font-size:13px;
     font-variant-numeric:tabular-nums}
   .feedbar .rest{flex:1; height:4px; background:var(--sunk); border-radius:2px; overflow:hidden}
