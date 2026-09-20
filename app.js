@@ -78,7 +78,7 @@ const STR = {
     len: (n, mins) => `共 ${n} 题，约 ${mins} 分钟，可分多次完成，答案自动保存。`,
     nameLabel: '你的名字', namePh: '留空 = 匿名',
     nameHint: '填了名字，换设备时打同样的名字就能接着上次继续。',
-    start: '开始', starting: '正在载入…', resumeQ: '已经答过一半？',
+    start: '开始', starting: '正在载入…', guideGo: '开始评审', resumeQ: '已经答过一半？',
     resumeA: '同一浏览器直接打开原链接就会接着上次的地方继续。换了设备或清过浏览器数据：' +
              '填了名字的，打同样的名字即可；匿名的，用左上角参与者编号找回记录。',
     prev: '← 上一题', next: '下一题 →', submit: '提交问卷',
@@ -103,7 +103,8 @@ const STR = {
          `several sittings; answers save automatically.`,
     nameLabel: 'Your name', namePh: 'leave blank to stay anonymous',
     nameHint: 'If you give a name, entering the same name on another device resumes where you left off.',
-    start: 'Start', starting: 'Starting…', resumeQ: 'Already partway through?',
+    start: 'Start', starting: 'Starting…', guideGo: 'Start reviewing',
+    resumeQ: 'Already partway through?',
     resumeA: 'Reopening the original link in the same browser resumes automatically. ' +
              'On another device, or after clearing browser data: if you gave a name, enter the ' +
              'same name; if you were anonymous, use the participant ID shown at the top left.',
@@ -554,8 +555,6 @@ function showPage(p, opts) {
     const c = document.querySelector(`.post[data-item="${CSS.escape(id)}"]`);
     if (c) c.hidden = !(i >= lo && i < hi);
   });
-  const g = document.querySelector('.guide');
-  if (g) g.hidden = S.page !== 0;          // 说明只在第一页占地方
   pageNavSync();
   if (!(opts && opts.keepScroll)) window.scrollTo({ top: 0, behavior: 'smooth' });
   Outbox.flush();
@@ -608,6 +607,35 @@ function guideCard() {
       paper or model-generated. Answer that last one <b>after</b> you have scored, not
       before.</span></div>`;
   return g;
+}
+
+/** 说明单独成屏，夹在填完个人信息与开始答题之间。
+    混在信息流顶部时，一次一题的版式下它会占掉整整一屏，且翻过去就再也看不到。 */
+function showGuide(next) {
+  $('nav').hidden = true;
+  $('main').classList.remove('wide', 'feedmode');
+  document.getElementById('feedRail')?.remove();
+  const fb = document.getElementById('feedBar');
+  if (fb) fb.hidden = true;
+
+  const wrap = el('div');
+  wrap.appendChild(guideCard());
+  const go = el('p');
+  go.style.margin = '18px 0 0';
+  const btn = el('button', 'primary', T().guideGo);
+  btn.type = 'button';
+  btn.addEventListener('click', () => {
+    try { localStorage.setItem('guide:' + S.code, '1'); } catch (e) { /* 无妨 */ }
+    next();
+  });
+  go.appendChild(btn);
+  wrap.appendChild(go);
+  $('main').replaceChildren(wrap);
+  window.scrollTo(0, 0);
+}
+
+function guideSeen() {
+  try { return localStorage.getItem('guide:' + S.code) === '1'; } catch (e) { return false; }
 }
 
 /** 左侧题号条：一格一题，填好变绿，点一下跳过去。 */
@@ -674,7 +702,6 @@ function renderFeed() {
   $('nav').hidden = true;
 
   const feed = el('div', 'feed');
-  feed.appendChild(guideCard());
   const cards = new Map();
   S.order.forEach((id, i) => {
     const it = S.items.find(x => x.id === id);
@@ -748,9 +775,11 @@ function renderFeed() {
       <span class="sel"><label for="pgSize">per page</label>
         <select id="pgSize">${PAGE_SIZES.map(v =>
           `<option value="${v}">${v || 'all'}</option>`).join('')}</select></span>
+      <button class="pg" id="pgGuide" type="button" title="Guidelines">?</button>
       <button class="primary" id="feedSubmit" disabled></button></div>`;
     document.body.appendChild(bar);
     bar.querySelector('#feedSubmit').addEventListener('click', () => $('btnFinish').click());
+    bar.querySelector('#pgGuide').addEventListener('click', () => showGuide(renderSurvey));
     bar.querySelector('#pgPrev').addEventListener('click', () => showPage(S.page - 1));
     bar.querySelector('#pgNext').addEventListener('click', () => showPage(S.page + 1));
     bar.querySelector('#pgSize').addEventListener('change', (e) => {
@@ -1023,7 +1052,8 @@ function showJoin(msg) {
     history.replaceState(null, '', u);       // 刷新/收藏仍能回到自己的进度
     showPid();
     S.idx = 0;
-    renderSurvey();
+    if ((SURVEYS[S.survey] || {}).mode === 'feed') showGuide(renderSurvey);
+    else renderSurvey();
   });
 }
 
@@ -1261,7 +1291,8 @@ async function boot() {
   // 续答落到第一道没答的题
   const first = S.order.findIndex(id => !answered(id));
   S.idx = first < 0 ? 0 : first;
-  renderSurvey();
+  if (isFeed() && !guideSeen()) showGuide(renderSurvey);
+  else renderSurvey();
 }
 
 $('btnPrev').addEventListener('click', () => { if (S.idx > 0) { S.idx--; renderItem(); } });
