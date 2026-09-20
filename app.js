@@ -9,7 +9,17 @@
 'use strict';
 
 const CFG = window.SURVEY_CONFIG || {};
-const PREVIEW = !CFG.ENDPOINT;
+
+// 端点按问卷选，两份问卷各有各的 Apps Script 部署。问卷种类要到 boot() 里
+// 解析完链接才知道，所以这两个值是 let，由 applyEndpoint() 落定。
+let ENDPOINT = '';
+let PREVIEW = true;
+
+function applyEndpoint() {
+  const map = CFG.ENDPOINTS || {};
+  ENDPOINT = map[S.survey] || CFG.ENDPOINT || '';
+  PREVIEW = !ENDPOINT;
+}
 
 const SESSION_ID = (() => {
   try {
@@ -151,7 +161,7 @@ function rejected(msg) {
 
 async function apiGet(params) {
   const q = new URLSearchParams(params);   // 无共享 token：邀请码就是凭据
-  const r = await fetch(`${CFG.ENDPOINT}?${q}`, { redirect: 'follow' });
+  const r = await fetch(`${ENDPOINT}?${q}`, { redirect: 'follow' });
   if (!r.ok) throw new Error('GET ' + r.status);
   const j = await r.json();
   if (!j.ok) throw rejected(j.error);
@@ -159,7 +169,7 @@ async function apiGet(params) {
 }
 
 async function apiPost(body) {
-  const r = await fetch(CFG.ENDPOINT, {
+  const r = await fetch(ENDPOINT, {
     method: 'POST',
     headers: { 'Content-Type': 'text/plain;charset=utf-8' },   // 不要改成 json
     redirect: 'follow',
@@ -217,7 +227,7 @@ const Outbox = {
 window.addEventListener('pagehide', () => {
   if (PREVIEW || !Outbox.pending.size) return;
   try {
-    fetch(CFG.ENDPOINT, {
+    fetch(ENDPOINT, {
       method: 'POST', keepalive: true,
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
       body: JSON.stringify({ code: S.code, session_id: SESSION_ID,
@@ -718,6 +728,7 @@ async function boot() {
   S.meta = bank.meta || {};
   // ?code= 是预先生成的邀请码，仍然支持；?p= 是自助登记拿到的参与者编号
   S.code = (q.get('p') || q.get('code') || recallPid(S.survey) || '').trim().toUpperCase();
+  applyEndpoint();                          // 端点随问卷走
   applyChrome();                            // 先定语言与标题，再渲染任何一屏
   setSave(PREVIEW ? 'preview' : 'saved');
 
