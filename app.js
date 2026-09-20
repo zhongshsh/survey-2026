@@ -534,10 +534,17 @@ const pageOf = (idx) => Math.max(0, idx);
 
 /** 切到第 p 篇。切之前把待写队列冲掉，别让答案压在本地。 */
 function showPage(p, opts) {
+  const from = S.page;
   S.page = Math.max(0, Math.min(p, pageCount() - 1));
+  const back = S.page < from;
   S.order.forEach((id, i) => {
     const c = document.querySelector(`.post[data-item="${CSS.escape(id)}"]`);
-    if (c) c.hidden = i !== S.page;
+    if (!c) return;
+    c.hidden = i !== S.page;
+    if (i !== S.page) return;
+    // 重启动画：先摘类、强制回流、再挂上，否则连点同方向不会再播
+    c.classList.remove('slidein', 'slideinback');
+    if (S.page !== from) { void c.offsetWidth; c.classList.add(back ? 'slideinback' : 'slidein'); }
   });
   pageNavSync();
   if (!(opts && opts.keepScroll)) window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -594,7 +601,6 @@ function guideCard() {
 function showGuide(next) {
   $('nav').hidden = true;
   $('main').classList.remove('wide', 'feedmode');
-  document.getElementById('feedRail')?.remove();
   const fb = document.getElementById('feedBar');
   if (fb) fb.hidden = true;
 
@@ -620,13 +626,10 @@ function guideSeen() {
 
 /** 左侧题号条：一格一题，填好变绿，点一下跳过去。 */
 function buildRail(cards) {
-  let rail = document.getElementById('feedRail');
-  if (rail) rail.remove();
-  rail = el('div', 'feedrail');
+  const host = document.getElementById('railHost');
+  if (!host) return;
+  const rail = el('div', 'feedrail');
   rail.id = 'feedRail';
-  const head = el('div', 'rhead');
-  head.id = 'railCount';
-  rail.appendChild(head);
   S.order.forEach((id, i) => {
     const b = el('button', null, String(i + 1).padStart(2, '0'));
     b.type = 'button';
@@ -638,7 +641,7 @@ function buildRail(cards) {
     });
     rail.appendChild(b);
   });
-  document.body.appendChild(rail);
+  host.replaceChildren(rail);
 }
 
 function railSync() {
@@ -656,7 +659,7 @@ function railHere(id) {
   rail.querySelectorAll('button').forEach(b => {
     const on = b.dataset.item === id;
     b.classList.toggle('here', on);
-    if (on) b.scrollIntoView({ block: 'nearest' });
+    if (on) b.scrollIntoView({ block: 'nearest', inline: 'center' });
   });
 }
 
@@ -665,9 +668,10 @@ function feedProgress() {
   const n = S.order.length;
   // 窄屏题号条会收起，那时底栏补一个计数；宽屏交给题号条
   const cnt = document.getElementById('feedCnt');
-  if (cnt) cnt.textContent = `${done} / ${n}`;
-  const rc = document.getElementById('railCount');
-  if (rc) rc.textContent = `${done}/${n}`;
+  if (cnt) {
+    cnt.textContent = `${done} / ${n} done`;
+    cnt.classList.toggle('done', done === n);
+  }
   const btn = document.getElementById('feedSubmit');
   if (btn) btn.disabled = done < n;
   railSync();
@@ -722,8 +726,6 @@ function renderFeed() {
   });
   main.replaceChildren(feed);
 
-  buildRail(cards);
-
   // 进入视野才开始计时：32 张卡一次渲染，否则后面的耗时全是假的。
   // 同一个观察器顺带把题号条的「当前题」高亮出来。
   if (window.IntersectionObserver) {
@@ -741,14 +743,17 @@ function renderFeed() {
     bar = el('div', 'feedbar');
     bar.id = 'feedBar';
     bar.innerHTML = `<div class="wrap">
-      <button class="pg" id="pgPrev" type="button">←</button>
-      <span class="cnt" id="pgLabel"></span>
-      <button class="pg" id="pgNext" type="button">→</button>
-      <span class="grow"></span>
-      <span class="cnt narrowonly" id="feedCnt"></span>
-      <span class="sv" id="feedSave"></span>
-      <button class="pg" id="pgGuide" type="button" title="Guidelines">?</button>
-      <button class="primary" id="feedSubmit" disabled></button></div>`;
+      <div id="railHost"></div>
+      <div class="ctl">
+        <button class="pg" id="pgPrev" type="button">←</button>
+        <span class="cnt" id="pgLabel"></span>
+        <button class="pg" id="pgNext" type="button">→</button>
+        <span class="grow"></span>
+        <span class="cnt" id="feedCnt"></span>
+        <span class="sv" id="feedSave"></span>
+        <button class="pg" id="pgGuide" type="button" title="Guidelines">?</button>
+        <button class="primary" id="feedSubmit" disabled></button>
+      </div></div>`;
     document.body.appendChild(bar);
     bar.querySelector('#feedSubmit').addEventListener('click', () => $('btnFinish').click());
     bar.querySelector('#pgGuide').addEventListener('click', () => showGuide(renderSurvey));
@@ -757,6 +762,7 @@ function renderFeed() {
   }
   bar.hidden = false;
   bar.querySelector('#feedSubmit').textContent = T().submit;
+  buildRail(cards);                      // 题号条住在底栏里，得等它建好
 
   feedProgress();
   // 续答时直接落到第一道没答完的题所在的页
@@ -936,7 +942,6 @@ function formSize() {
 function showJoin(msg) {
   $('nav').hidden = true;
   $('main').classList.remove('wide', 'feedmode');
-  document.getElementById('feedRail')?.remove();
   const fb = document.getElementById('feedBar');
   if (fb) fb.hidden = true;
   const cfg = SURVEYS[S.survey] || SURVEYS.judge;
@@ -1151,7 +1156,6 @@ function recallPid(survey) {
 function showFatal(msg) {
   $('nav').hidden = true;
   $('main').classList.remove('wide', 'feedmode');
-  document.getElementById('feedRail')?.remove();
   const fb = document.getElementById('feedBar');
   if (fb) fb.hidden = true;
   const t = T();
@@ -1162,7 +1166,6 @@ function showFatal(msg) {
 function showThanks() {
   $('nav').hidden = true;
   $('main').classList.remove('wide', 'feedmode');
-  document.getElementById('feedRail')?.remove();
   const fb = document.getElementById('feedBar');
   if (fb) fb.hidden = true;
   const t = T();
