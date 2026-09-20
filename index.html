@@ -267,15 +267,24 @@
 
   /* 题号条：全部列出，并在控制行中间；放不下就横向滚动 */
   #railHost{flex:1 1 auto; min-width:0; overflow:hidden}
-  .feedrail{display:flex; align-items:center; gap:4px; flex-wrap:nowrap;
-    overflow-x:auto; scrollbar-width:thin; padding-bottom:2px}
+  .feedrail{display:flex; align-items:center; gap:5px; flex-wrap:nowrap;
+    overflow-x:auto; scrollbar-width:thin; padding:3px 2px 4px}
   .feedrail button{flex:0 0 auto; font-family:"IBM Plex Mono",monospace; font-size:11px;
     font-variant-numeric:tabular-nums; min-width:26px; padding:3px 0; border-radius:4px;
     border:1px solid var(--rule2); background:var(--card); color:var(--ink3);
     cursor:pointer; transition:background .15s, color .15s, border-color .15s}
   .feedrail button:hover{border-color:var(--accent); color:var(--accent)}
-  .feedrail button.done{background:var(--good); border-color:var(--good); color:#fff}
-  .feedrail button.here{outline:2px solid var(--accent); outline-offset:1px}
+  /* 两种状态是正交的，所以各占一个视觉通道：
+     「已答」用颜色（绿），「当前」用填充 + 放大 + 投影。
+     原先当前题用 outline 描边，和绿色实底撞在一起，既脏又看不清是哪一格。 */
+  .feedrail button.done{background:var(--good-soft); border-color:var(--good);
+    color:var(--good); font-weight:600}
+  .feedrail button.here{background:var(--accent); border-color:var(--accent);
+    color:#fff; font-weight:600; transform:scale(1.15);
+    box-shadow:0 2px 7px rgba(58,79,160,.35)}
+  .feedrail button.here.done{background:var(--good); border-color:var(--good);
+    box-shadow:0 2px 7px rgba(23,112,95,.35)}
+  @media (prefers-reduced-motion:reduce){ .feedrail button{transition:none} }
 
   /* 页面两侧的悬浮翻页箭头 */
   .navarrow{position:fixed; top:50%; transform:translateY(-50%); z-index:26;
