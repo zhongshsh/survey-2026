@@ -552,11 +552,8 @@ function showPage(p, opts) {
 }
 
 function pageNavSync() {
-  const lab = document.getElementById('pgLabel');
-  if (lab) lab.textContent = `${S.page + 1} / ${S.order.length}`;
   const first = S.page === 0, last = S.page >= pageCount() - 1;
-  [['pgPrev', first], ['pgNext', last],
-   ['navArrowL', first], ['navArrowR', last]].forEach(([id, off]) => {
+  [['navArrowL', first], ['navArrowR', last]].forEach(([id, off]) => {
     const b = document.getElementById(id);
     if (b) b.disabled = off;
   });
@@ -729,9 +726,6 @@ function renderFeed() {
     bar.id = 'feedBar';
     bar.innerHTML = `<div class="wrap">
       <div class="ctl">
-        <button class="pg" id="pgPrev" type="button">←</button>
-        <span class="cnt" id="pgLabel"></span>
-        <button class="pg" id="pgNext" type="button">→</button>
         <div id="railHost"></div>
         <span class="cnt" id="feedCnt"></span>
         <span class="sv" id="feedSave"></span>
@@ -741,8 +735,6 @@ function renderFeed() {
     document.body.appendChild(bar);
     bar.querySelector('#feedSubmit').addEventListener('click', () => $('btnFinish').click());
     bar.querySelector('#pgGuide').addEventListener('click', () => showGuide(renderSurvey));
-    bar.querySelector('#pgPrev').addEventListener('click', () => showPage(S.page - 1));
-    bar.querySelector('#pgNext').addEventListener('click', () => showPage(S.page + 1));
   }
   bar.hidden = false;
   bar.querySelector('#feedSubmit').textContent = T().submit;

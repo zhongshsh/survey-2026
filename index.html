@@ -288,8 +288,11 @@
   .navarrow:disabled{opacity:.25; cursor:default}
   .navarrow.l{left:10px}
   .navarrow.r{right:10px}
-  /* 窄屏没有留白放箭头，交给底栏那对按钮 */
-  @media (max-width:900px){ .navarrow{display:none} }
+  /* 底栏已无翻页按钮，所以窄屏也必须留着悬浮箭头 —— 只是缩小、贴边 */
+  @media (max-width:900px){
+    .navarrow{width:36px; height:36px; font-size:16px; opacity:.72}
+    .navarrow.l{left:4px} .navarrow.r{right:4px}
+  }
 
   .feedbar{position:fixed; left:0; right:0; bottom:0; z-index:30; background:var(--card);
     border-top:1px solid var(--rule);
