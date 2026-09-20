@@ -816,8 +816,9 @@ const PROFILE = {
   },
   review_exp: {
     label: 'Peer-review experience',
-    opts: [['none', 'Never reviewed'], ['workshop', 'Workshop / journal'],
-           ['conf', 'Reviewed for top-tier conferences'],
+    // 期刊审稿(TPAMI / JMLR 这类)是资深活动，和 workshop 不是一个量级，不能并档
+    opts: [['none', 'Never reviewed'], ['workshop', 'Workshop'],
+           ['conf', 'Reviewed for top-tier conferences / journals'],
            ['ac', 'AC / SAC / PC at top-tier']],
   },
 };
