@@ -176,6 +176,15 @@
     border-radius:0 4px 4px 0; padding:12px 14px; margin:14px 0; font-size:13.5px; color:var(--ink2)}
   .note b{color:var(--ink)}
 
+  /* ---- 登记页的背景问题 ---- */
+  .prow{margin:16px 0; padding:12px 14px; border:1px solid var(--rule);
+    border-radius:5px; background:var(--sunk)}
+  .prow.missing{border-color:#c0392b; outline:2px solid #c0392b; outline-offset:2px}
+  .prow .plab{font-size:13.5px; font-weight:600; margin-bottom:8px}
+  .prow .plab small{display:block; font-weight:400; color:var(--ink3);
+    font-size:12.5px; margin-top:2px}
+  .prow .popts{display:flex; flex-wrap:wrap; gap:8px 18px; align-items:center}
+
   /* ---- feed 模式：Part B 的沉浸式信息流 ---- */
   .feed{max-width:1240px; margin:0 auto; padding-block:8px 120px}
   /* 一张卡 = 一条 idea，卡内左右分栏：左读内容，右打分，视线不用上下折返 */
