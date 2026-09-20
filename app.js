@@ -56,7 +56,7 @@ const SURVEYS = {
     part: 'B',
     mode: 'feed',          // 连续信息流；judge 仍走一题一屏的分页
 
-    minPerItem: 3,         // 读标题+摘要+schema，再给九项评分和一段风险描述
+    minPerItem: 2,         // 读标题+摘要，八项点选，无文本框
 
     title: 'Idea 质量评审',
     blurb: '每题给你一个研究 idea 的结构化描述，请像审稿一样给它打分，' +
@@ -269,6 +269,18 @@ const n15 = (lo, hi) => [{ v: 1, t: '1', s: lo }, { v: 2, t: '2' }, { v: 3, t: '
    但它仍然要在左边的 schema 里显示 —— 它是读懂另外四个字段的上下文。 */
 const NOT_RATED = ['contribution_type'];
 
+/* 领域写全称。语料里的 theme 是目录名（mlsys 这类缩写），直接摆给受试者
+   既不专业也影响「你对这个方向熟不熟」那一问的作答。 */
+const AREA_NAMES = {
+  auto_research: 'Automated Scientific Research',
+  world_models: 'World Models',
+  code_generation: 'Code Generation',
+  mlsys: 'Machine Learning Systems',
+};
+function areaName(t) {
+  return AREA_NAMES[t] || String(t || '').replace(/_/g, ' ');
+}
+
 /** 当前问卷里要评的字段（题面显示五个，评分不含 contribution_type）。 */
 function ratedFields() {
   return S.meta.asked_fields ||
@@ -283,17 +295,13 @@ function missingKeys(part, ans) {
   ans = ans || {};
   const need = part === 'A'
     ? [...ratedFields().map(f => 'f_' + f), 'same_idea', 'confidence']
-    : ['originality', 'significance', 'soundness', 'specificity',
-       'feasibility', 'success', 'overall', 'guess_source', 'expertise', 'risk'];
+    : ['soundness', 'presentation', 'contribution',
+       'feasibility', 'success', 'rating', 'confidence',
+       'guess_source', 'expertise'];
   const miss = need.filter(k => {
     const v = ans[k];
     return v === undefined || v === null || String(v).trim() === '';
   });
-  // 卡点多选只在「可行性 ≤3」时必填 —— 它本来就是那一档的追问
-  if (part === 'B' && Number(ans.feasibility) <= 3 &&
-      !(Array.isArray(ans.blockers) && ans.blockers.length)) {
-    miss.push('blockers');
-  }
   return miss;
 }
 
@@ -350,91 +358,71 @@ function renderA(it) {
 
 function renderB(it) {
   // 这一卷的题面是「标题 + 摘要 + schema」：先给人读原文，再给结构化拆解。
-  // 摘要是原文照搬，判 originality 要的就是这个信息量。
   const head = [
-    it.theme ? `<div class="bmeta">${esc(it.theme)}</div>` : '',
+    it.theme ? `<div class="bmeta">${esc(areaName(it.theme))}</div>` : '',
     it.title ? `<h3 class="btitle">${esc(it.title)}</h3>` : '',
     it.abstract ? `<div class="babs">${esc(it.abstract)}</div>` : '',
   ].join('');
   const left = head + (head ? '<div class="bsep">structured summary</div>' : '') +
                fieldsHtml(it.schema);
+
+  // 第一组照搬 ICLR 2026 Official Review 的 Soundness / Presentation / Contribution，
+  // 四档、措辞与官方一致 —— 受试者多半审过 ICLR，用他们熟悉的尺子噪声最小。
+  const q4 = (name) => scale(name, [
+    { v: 1, t: '1', s: 'poor' }, { v: 2, t: '2', s: 'fair' },
+    { v: 3, t: '3', s: 'good' }, { v: 4, t: '4', s: 'excellent' }]);
+
   const right = `
     <div class="ans">
-      <h4>第一组 · 评审维度（1–5）</h4>
-      <div class="row"><div class="q"><b>Originality</b>
-        <small>相对你所知的已有工作，这个 delta 是真的吗、有多大？</small></div>
-        ${scale('originality', n15('已有', '开新路'))}</div>
-      <div class="row"><div class="q"><b>Significance</b>
-        <small>若主张成立，会改变多少人的做法？</small></div>
-        ${scale('significance', n15('无人关心', '改变领域'))}</div>
-      <div class="row"><div class="q"><b>Soundness of the plan</b>
-        <small>research_plan 里的证据真能支撑它要证的东西吗？baseline、消融、失败条件够不够？</small></div>
-        ${scale('soundness', n15('证不出', '严密'))}</div>
-      <div class="row"><div class="q"><b>Specificity</b>
-        <small>说清楚到可以照着动手了吗？还是停在口号层面？</small></div>
-        ${scale('specificity', n15('空泛', '可执行'))}</div>
+      <h4>第一组 · 评审维度（ICLR 2026 口径，1–4）</h4>
+      <div class="row"><div class="q"><b>Soundness</b>
+        <small>技术主张、实验与研究方法是否站得住；核心主张有没有足够证据支撑。</small></div>
+        ${q4('soundness')}</div>
+      <div class="row"><div class="q"><b>Presentation</b>
+        <small>写作与表述的清晰程度，以及相对已有工作的定位是否交代清楚。</small></div>
+        ${q4('presentation')}</div>
+      <div class="row"><div class="q"><b>Contribution</b>
+        <small>对该研究领域的整体贡献。问题重不重要？想法或执行是否有实质原创性？
+          结果值不值得分享给更广的社区？</small></div>
+        ${q4('contribution')}</div>
     </div>
     <div class="ans">
       <h4>第二组 · 能不能做 / 会不会成</h4>
-      <div class="note"><b>统一预算前提：</b>一名博士生 + 两名合作者，3 个月，8×A100，
-        公开数据与公开 API，无自采实验数据。下面两问都以此为准。</div>
-      <div class="row"><div class="q"><b>Feasibility</b> — 在上述预算内做得出来吗？</div>
+      <div class="row"><div class="q"><b>Feasibility</b>
+        <small>按它自己描述的方案，这套实验做得出来吗？</small></div>
         ${scale('feasibility', [{ v: 1, t: '1', s: '做不了' }, { v: 2, t: '2', s: '要砍' },
                                 { v: 3, t: '3', s: '勉强' }, { v: 4, t: '4', s: '可以' },
                                 { v: 5, t: '5', s: '很轻松' }])}</div>
-      <div class="row"><div class="q">若 ≤3，卡在哪？<small>多选</small></div></div>
-      <div style="display:flex;flex-wrap:wrap;gap:6px 16px;margin-bottom:12px">
-        ${['拿不到数据或环境', '算力不够', '缺可用 benchmark 或 ground truth',
-           '关键组件未定义，无法实现', '工程量远超 3 个月', '需要人工标注或领域专家']
-          .map((t, i) => `<label class="opt"><input type="checkbox" name="blockers" value="b${i + 1}"> ${t}</label>`).join('')}
-      </div>
-      <div class="row"><div class="q"><b>Expected success</b> — 假设按计划完整做完，主要主张成立的概率？
-        <small>问的是「实验会不会 work」，与可行性分开：容易做但多半不 work 的 idea 很常见。</small></div>
+      <div class="row"><div class="q"><b>Expected success</b>
+        <small>假设按计划完整做完，主要主张成立的概率？与可行性分开：
+          容易做但多半不 work 的 idea 很常见。</small></div>
         ${scale('success', [{ v: 'p10', t: '<10%' }, { v: 'p10_30', t: '10–30%' },
                             { v: 'p30_50', t: '30–50%' }, { v: 'p50_70', t: '50–70%' },
                             { v: 'p70', t: '>70%' }])}</div>
-      <div class="row"><div class="q">最可能让它失败的那一件事</div></div>
-      <textarea name="risk" rows="2"></textarea>
     </div>
     <div class="ans">
       <h4>第三组 · 总评</h4>
-      <div class="row"><div class="q"><b>Overall rating</b>（ICLR 1–10，只评 idea 本身，不评写作）</div>
-        ${scale('overall', [{ v: 1, t: '1' }, { v: 3, t: '3', s: 'reject' },
-                            { v: 5, t: '5', s: 'borderline' }, { v: 6, t: '6', s: 'weak acc' },
-                            { v: 8, t: '8', s: 'accept' }, { v: 10, t: '10', s: 'top 5%' }])}</div>
+      <div class="row"><div class="q"><b>Rating</b><small>ICLR 2026 总分</small></div>
+        ${scale('rating', [
+          { v: 0, t: '0', s: 'strong reject' },
+          { v: 2, t: '2', s: 'reject' },
+          { v: 4, t: '4', s: 'marg. below' },
+          { v: 6, t: '6', s: 'marg. above' },
+          { v: 8, t: '8', s: 'accept' },
+          { v: 10, t: '10', s: 'strong accept' }])}</div>
+      <div class="row"><div class="q"><b>Confidence</b>
+        <small>5 = 完全确定，熟悉相关工作并核对过细节；3 = 比较确定，可能有未读懂之处；
+          1 = 无法评估。</small></div>
+        ${scale('confidence', [{ v: 1, t: '1' }, { v: 2, t: '2' }, { v: 3, t: '3' },
+                               { v: 4, t: '4' }, { v: 5, t: '5' }])}</div>
       <div class="row"><div class="q">你猜这条是？<small>盲法检查</small></div>
         ${scale('guess_source', [{ v: 'paper', t: '真实论文' }, { v: 'agent', t: 'AI 生成' },
                                  { v: 'unsure', t: '看不出' }])}</div>
-      <div class="row"><div class="q">这条 idea 所在的子领域你熟悉吗？</div>
+      <div class="row"><div class="q">你对 <b>${esc(areaName(it.theme))}</b> 这个方向熟悉吗？</div>
         ${scale('expertise', [{ v: 1, t: '不熟' }, { v: 2, t: '读过' },
                               { v: 3, t: '做过' }, { v: 4, t: '发过' }])}</div>
     </div>`;
   return { left, right };
-}
-
-/* -------------------------------------------------------------- 答案读写 */
-
-function readItem(node) {
-  const out = {};
-  node.querySelectorAll('input[type=radio]:checked').forEach(i => { out[i.name] = i.value; });
-  node.querySelectorAll('input[type=checkbox]:checked').forEach(i => {
-    (out[i.name] = out[i.name] || []).push(i.value);
-  });
-  node.querySelectorAll('textarea, input[type=text]').forEach(i => {
-    if (i.value.trim()) out[i.name] = i.value.trim();
-  });
-  return out;
-}
-
-function writeItem(node, ans) {
-  if (!ans) return;
-  Object.entries(ans).forEach(([name, val]) => {
-    const vals = Array.isArray(val) ? val.map(String) : [String(val)];
-    node.querySelectorAll(`[name="${CSS.escape(name)}"]`).forEach(i => {
-      if (i.type === 'radio' || i.type === 'checkbox') i.checked = vals.includes(i.value);
-      else i.value = val;
-    });
-  });
 }
 
 /* ---------------------------------------------------------------- feed 模式 */
@@ -447,6 +435,7 @@ function feedCard(it, i) {
   const seq = String(i + 1).padStart(2, '0');
   const post = el('div', 'post');
   post.dataset.item = it.id;
+  // 左：题面。右：评分。两栏并排，读与打分不用上下折返。
   post.innerHTML = `
     <div class="inner">
       <div class="phead">
