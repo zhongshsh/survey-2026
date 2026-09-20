@@ -89,6 +89,7 @@ const STR = {
     left: (n) => `还有 ${n} 项未填`,
     joinFail: '登记失败，请重试。',
     offline: '连不上问卷服务器，请检查网络后重试。',
+    serverErr: '问卷服务器出错了，请把这条信息发给研究者。',
     errTitle: '出错了', errBody: '刷新页面重试；若反复出现请联系研究者。',
     loading: '正在载入…', bankFail: '题库载入失败：',
     leftover: '还有答案没保存成功，请检查网络后再试。', submitFail: '提交失败：',
@@ -114,6 +115,7 @@ const STR = {
     left: (n) => `${n} left on this item`,
     joinFail: 'Could not register. Please try again.',
     offline: 'Cannot reach the survey server. Check your connection and try again.',
+    serverErr: 'The survey server returned an error. Please send this message to the researcher.',
     errTitle: 'Something went wrong', errBody: 'Refresh to retry; if it keeps happening, contact the researcher.',
     loading: 'Loading…', bankFail: 'Could not load the item bank: ',
     leftover: 'Some answers have not been saved yet. Check your connection and try again.',
@@ -155,6 +157,20 @@ function setSave(state, text) {
   const n = $('saveState');
   n.dataset.s = state;
   n.textContent = text || T()[state] || state;
+}
+
+/**
+ * 把异常翻译成一句人能看懂、且**指向正确方向**的话。
+ * 三种情况必须分开：服务器明确拒绝 / 后端崩了 / 真的连不上。
+ * 混成一句「检查你的网络」，排查时就会一直往网络上找。
+ */
+function describeError(e, t) {
+  if (e && e.rejected) return e.message || t.joinFail;
+  const m = String((e && e.message) || e || '');
+  if (/^(GET|POST) \d/.test(m) || /JSON|Unexpected token/i.test(m)) {
+    return `${t.serverErr} (${m.slice(0, 80)})`;
+  }
+  return t.offline;
 }
 
 /** 服务器答了但拒绝了（比如编号不存在）。这是正常状态，不是故障。 */
@@ -435,6 +451,31 @@ function renderB(it) {
                               { v: 3, t: 'worked in it' }, { v: 4, t: 'published in it' }])}</div>
     </div>`;
   return { left, right };
+}
+
+/* -------------------------------------------------------------- 答案读写 */
+
+function readItem(node) {
+  const out = {};
+  node.querySelectorAll('input[type=radio]:checked').forEach(i => { out[i.name] = i.value; });
+  node.querySelectorAll('input[type=checkbox]:checked').forEach(i => {
+    (out[i.name] = out[i.name] || []).push(i.value);
+  });
+  node.querySelectorAll('textarea, input[type=text]').forEach(i => {
+    if (i.value.trim()) out[i.name] = i.value.trim();
+  });
+  return out;
+}
+
+function writeItem(node, ans) {
+  if (!ans) return;
+  Object.entries(ans).forEach(([name, val]) => {
+    const vals = Array.isArray(val) ? val.map(String) : [String(val)];
+    node.querySelectorAll(`[name="${CSS.escape(name)}"]`).forEach(i => {
+      if (i.type === 'radio' || i.type === 'checkbox') i.checked = vals.includes(i.value);
+      else i.value = val;
+    });
+  });
 }
 
 /* ---------------------------------------------------------------- feed 模式 */
@@ -785,31 +826,35 @@ function showJoin(msg) {
       };
     }
     if (PREVIEW) { S.code = 'PREVIEW'; showPid(); S.idx = 0; renderSurvey(); return; }
+    // 只有网络这一段放进 try。渲染绝不能放进来 —— 渲染抛错被这个 catch 接住，
+    // 就会报成「连不上服务器」，而实际上 join 早已成功。这个坑真踩过。
+    let r;
     try {
       // forms 非空时由后端轮转分配其中一份；前端只把候选交上去
-      const r = await apiPost({ action: 'join', survey: S.survey, name,
-                                fresh: S.fresh, ...profile,
-                                items_build: S.meta.build_hash || '',
-                                forms: S.meta.forms || null,
-                                item_ids: S.items.map(i => i.id) });
-      rememberPid(S.survey, r.code);
-      // 直接开答，不重载。重载要再拉一次 items.json(quality 那份 632KB)
-      // 外加一次 Apps Script 往返取状态，冷启动时这两步能吃掉十几秒。
-      S.code = r.code;
-      S.order = (r.item_ids && r.item_ids.length) ? r.item_ids
-                                                  : S.items.map(i => i.id);
-      S.answers = r.answers || {};
-      const u = new URL(location.href);
-      u.searchParams.set('p', r.code);
-      history.replaceState(null, '', u);     // 刷新/收藏仍能回到自己的进度
-      showPid();
-      S.idx = 0;
-      renderSurvey();
+      r = await apiPost({ action: 'join', survey: S.survey, name,
+                          fresh: S.fresh, ...profile,
+                          items_build: S.meta.build_hash || '',
+                          forms: S.meta.forms || null,
+                          item_ids: S.items.map(i => i.id) });
     } catch (e) {
       $('joinGo').disabled = false;
       $('joinGo').textContent = btnLabel;
-      showJoin(e.rejected ? (e.message || t.joinFail) : t.offline);
+      showJoin(describeError(e, t));
+      return;
     }
+    rememberPid(S.survey, r.code);
+    // 直接开答，不重载。重载要再拉一次 items.json(quality 那份 632KB)
+    // 外加一次 Apps Script 往返取状态，冷启动时这两步能吃掉十几秒。
+    S.code = r.code;
+    S.order = (r.item_ids && r.item_ids.length) ? r.item_ids
+                                                : S.items.map(i => i.id);
+    S.answers = r.answers || {};
+    const u = new URL(location.href);
+    u.searchParams.set('p', r.code);
+    history.replaceState(null, '', u);       // 刷新/收藏仍能回到自己的进度
+    showPid();
+    S.idx = 0;
+    renderSurvey();
   });
 }
 
@@ -1014,7 +1059,7 @@ async function boot() {
         forgetPid();
         showJoin();
       } else {
-        showJoin(T().offline);
+        showJoin(describeError(e, T()));
       }
       return;
     }
@@ -1089,6 +1134,17 @@ $('btnFinish').addEventListener('click', async () => {
 window.addEventListener('resize', () => {
   const card = document.querySelector('.item');
   if (card) syncRate(card);
+});
+
+// 渲染期的未捕获异常必须露出来。以前它会表现成白屏或一句莫名其妙的网络错误。
+window.addEventListener('error', (ev) => {
+  console.error('uncaught', ev.error || ev.message);
+  const m = document.getElementById('main');
+  if (m && !m.querySelector('.post, .item')) {
+    m.innerHTML = `<div class="panel"><h2>${T().errTitle}</h2>` +
+      `<p>${esc(String((ev.error && ev.error.message) || ev.message).slice(0, 200))}</p>` +
+      `<p>${T().errBody}</p></div>`;
+  }
 });
 
 boot();
