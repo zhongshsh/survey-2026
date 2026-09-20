@@ -54,7 +54,7 @@ const SURVEYS = {
     lang: 'zh',
     bank: 'items.idea-quality.json',
     part: 'B',
-    minPerItem: 3,         // 九项评分 + 一段风险描述
+    minPerItem: 3,         // 读标题+摘要+schema，再给九项评分和一段风险描述
 
     title: 'Idea 质量评审',
     blurb: '每题给你一个研究 idea 的结构化描述，请像审稿一样给它打分，' +
@@ -347,7 +347,15 @@ function renderA(it) {
 }
 
 function renderB(it) {
-  const left = fieldsHtml(it.schema);
+  // 这一卷的题面是「标题 + 摘要 + schema」：先给人读原文，再给结构化拆解。
+  // 摘要是原文照搬，判 originality 要的就是这个信息量。
+  const head = [
+    it.theme ? `<div class="bmeta">${esc(it.theme)}</div>` : '',
+    it.title ? `<h3 class="btitle">${esc(it.title)}</h3>` : '',
+    it.abstract ? `<div class="babs">${esc(it.abstract)}</div>` : '',
+  ].join('');
+  const left = head + (head ? '<div class="bsep">structured summary</div>' : '') +
+               fieldsHtml(it.schema);
   const right = `
     <div class="ans">
       <h4>第一组 · 评审维度（1–5）</h4>
@@ -490,7 +498,7 @@ function renderItem() {
   // 「3 / 12」对不上，只会让人以为跳题了。真实 item_id 记在提交数据里。
   const seq = String(S.idx + 1).padStart(2, '0');
   card.innerHTML =
-    `<div class="ihead"><span class="inum" title="${esc(it.id)}">${seq}</span></div>
+    `<div class="ihead"><span class="inum">${seq}</span></div>
      <div class="ibody" id="itemBody">
        <div class="stage">
          <div class="read">${parts.left}</div>
