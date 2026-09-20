@@ -463,8 +463,16 @@ let shownAt = Date.now();
 
 function renderItem() {
   const id = S.order[S.idx];
-  const it = S.items.find(x => x.id === id);
-  if (!it) { showFatal(`题目 ${id} 不在 items.json 里`); return; }
+  let it = S.items.find(x => x.id === id);
+  if (!it) {
+    // 兜底：题序里混进了本题库没有的题号。跳过它，别让整份问卷卡死在这一题。
+    console.warn('题序里有未知题号，已跳过:', id);
+    S.order = S.order.filter(x => S.items.some(y => y.id === x));
+    if (!S.order.length) { forgetPid(); showJoin(); return; }
+    S.idx = Math.min(S.idx, S.order.length - 1);
+    it = S.items.find(x => x.id === S.order[S.idx]);
+    if (!it) { showFatal(T().errBody); return; }
+  }
   shownAt = Date.now();
 
   const parts = it.part === 'A' ? renderA(it) : renderB(it);
@@ -629,6 +637,18 @@ function showPid() {
 }
 
 /* 参与者编号按问卷分别记在本地：同一台机器可以先后做两份问卷，互不覆盖。 */
+/** 丢掉当前身份：本地副本、URL 上的 ?p=/?code= 一起清掉。 */
+function forgetPid() {
+  try { localStorage.removeItem('pid:' + S.survey); } catch (e) { /* 无妨 */ }
+  const u = new URL(location.href);
+  u.searchParams.delete('p');
+  u.searchParams.delete('code');
+  history.replaceState(null, '', u);
+  S.code = null;
+  S.answers = {};
+  $('codePill').hidden = true;
+}
+
 function rememberPid(survey, pid) {
   try { localStorage.setItem('pid:' + survey, pid); } catch (e) { /* 存不下不影响本次作答 */ }
 }
@@ -702,12 +722,7 @@ async function boot() {
       // 编号不存在(换过题库、清过表、链接手抄错)就当没带编号，安静回登记页；
       // 把它当错误弹给受试者只会让人以为自己做错了什么。
       if (e.rejected) {
-        try { localStorage.removeItem('pid:' + S.survey); } catch (_) { /* 无妨 */ }
-        const u = new URL(location.href);
-        u.searchParams.delete('p');
-        u.searchParams.delete('code');
-        history.replaceState(null, '', u);
-        S.code = null;
+        forgetPid();
         showJoin();
       } else {
         showJoin(T().offline);
@@ -715,7 +730,18 @@ async function boot() {
       return;
     }
     rememberPid(st.survey || S.survey, S.code);
-    S.order = (st.item_ids && st.item_ids.length) ? st.item_ids : S.items.map(i => i.id);
+    // 服务端存的题序可能来自另一版题库（题库换过、或这个编号是旧卷发的）。
+    // 那种记录不能续答：它的答案对应的是别的题面。安静地让人重新登记，
+    // 旧行仍留在表里，带着自己的 items_build，事后照样解得回去。
+    const known = new Set(S.items.map(i => i.id));
+    const srv = st.item_ids || [];
+    const stale = srv.length && srv.some(id => !known.has(id));
+    if (stale) {
+      forgetPid();
+      showJoin();
+      return;
+    }
+    S.order = srv.length ? srv : S.items.map(i => i.id);
     S.survey = st.survey || 'judge';
     S.surveyTitle = st.survey_title || '';
     S.answers = st.answers || {};
