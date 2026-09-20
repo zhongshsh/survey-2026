@@ -495,7 +495,7 @@ function feedCard(it, i) {
       </div>
       ${it.title ? `<h3>${esc(it.title)}</h3>` : ''}
       ${it.abstract ? `<div class="abs">${esc(it.abstract)}</div>` : ''}
-      <details class="sch"><summary>Structured summary</summary>
+      <details class="sch" open><summary>Structured summary</summary>
         <div class="body">${fieldsHtml(it.schema)}</div></details>
     </div>
     <div class="rate">${renderB(it).right}</div>`;
