@@ -34,6 +34,8 @@ const SURVEYS = {
     lang: 'en',
     bank: 'items.same-idea-judge.json',
     part: 'A',
+    minPerItem: 0.75,      // 每题 3 格逐字段 + 整体 + 把握度，纯点选
+
     title: 'Same-Idea Judgement',
     blurb: 'Each item shows two anonymized research idea schemas. Decide whether they ' +
            'describe the same core idea. We are measuring how human judgement compares ' +
@@ -43,6 +45,8 @@ const SURVEYS = {
     lang: 'zh',
     bank: 'items.idea-quality.json',
     part: 'B',
+    minPerItem: 3,         // 九项评分 + 一段风险描述
+
     title: 'Idea 质量评审',
     blurb: '每题给你一个研究 idea 的结构化描述，请像审稿一样给它打分，' +
            '并判断它做不做得出来、实验大概率会不会 work。' +
@@ -56,7 +60,7 @@ const SURVEYS = {
 const STR = {
   zh: {
     privacy: '不收集个人身份信息，数据仅用于学术研究。点「开始」即表示同意参与，可随时退出。',
-    len: (n) => `共 ${n} 题，可分多次完成，答案自动保存。`,
+    len: (n, mins) => `共 ${n} 题，约 ${mins} 分钟，可分多次完成，答案自动保存。`,
     nameLabel: '你的名字', namePh: '留空 = 匿名',
     nameHint: '填了名字，换设备时打同样的名字就能接着上次继续。',
     start: '开始', resumeQ: '已经答过一半？',
@@ -79,7 +83,8 @@ const STR = {
     privacy: 'No personally identifying information is collected; the data is used for ' +
              'academic research only. Clicking Start indicates your consent to take part. ' +
              'You may stop at any time.',
-    len: (n) => `${n} items. You can complete them in several sittings; answers save automatically.`,
+    len: (n, mins) => `${n} items, about ${mins} minutes. You can complete them in ` +
+         `several sittings; answers save automatically.`,
     nameLabel: 'Your name', namePh: 'leave blank to stay anonymous',
     nameHint: 'If you give a name, entering the same name on another device resumes where you left off.',
     start: 'Start', resumeQ: 'Already partway through?',
@@ -565,7 +570,9 @@ function showJoin(msg) {
   p.innerHTML = `
     <h2>${esc(cfg.title)}</h2>
     <p>${cfg.blurb}</p>
-    <p>${t.privacy} ${t.len(S.order.length || S.items.length)}</p>
+    <p>${t.privacy} ${t.len(S.order.length || S.items.length,
+        Math.max(1, Math.round((S.order.length || S.items.length) *
+                               (cfg.minPerItem || 1.8))))}</p>
     ${msg ? `<div class="note">${esc(msg)}</div>` : ''}
     <div class="row" style="margin-top:18px"><div class="q">${t.nameLabel}</div></div>
     <input type="text" id="nameIn" placeholder="${t.namePh}" maxlength="60" style="max-width:280px">
