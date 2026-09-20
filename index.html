@@ -37,6 +37,10 @@
   }
   *{box-sizing:border-box}
   html,body{margin:0}
+  /* 必须有这一条。hidden 属性靠浏览器默认样式表的 display:none 生效，
+     而作者样式优先级更高 —— .post 设了 display:grid，hidden 就被盖掉了，
+     32 张卡会全部留在页面上排成一列。 */
+  [hidden]{display:none !important}
   body{background:var(--paper); color:var(--ink);
     font-family:"IBM Plex Sans",system-ui,-apple-system,sans-serif;
     font-size:15px; line-height:1.62;
@@ -49,7 +53,7 @@
      左右内边距同时给题号条留槽：它是 fixed 悬浮的，不占布局空间，
      不留槽就会压在卡片上（原先 94vw 只剩三十几像素，装不下 44px 宽的条）。 */
   .wrap.feedmode{max-width:none; padding-inline:16px;}
-  @media (min-width:1181px){ .wrap.feedmode{padding-inline:28px;} }
+  @media (min-width:901px){ .wrap.feedmode{padding-inline:66px;} }
   h1,h2,h3{margin:0; text-wrap:balance}
   code,.mono{font-family:"IBM Plex Mono",ui-monospace,Menlo,monospace}
 
@@ -272,6 +276,20 @@
   .feedrail button.done{background:var(--good); border-color:var(--good); color:#fff}
   .feedrail button.here{outline:2px solid var(--accent); outline-offset:1px}
 
+  /* 页面两侧的悬浮翻页箭头 */
+  .navarrow{position:fixed; top:50%; transform:translateY(-50%); z-index:26;
+    width:44px; height:44px; border-radius:50%; display:flex; align-items:center;
+    justify-content:center; font-size:19px; line-height:1;
+    border:1px solid var(--rule2); background:var(--card); color:var(--ink2);
+    box-shadow:var(--shadow); cursor:pointer; opacity:.85;
+    transition:opacity .15s, border-color .15s, color .15s}
+  .navarrow:hover:not(:disabled){opacity:1; border-color:var(--accent); color:var(--accent)}
+  .navarrow:disabled{opacity:.25; cursor:default}
+  .navarrow.l{left:10px}
+  .navarrow.r{right:10px}
+  /* 窄屏没有留白放箭头，交给底栏那对按钮 */
+  @media (max-width:900px){ .navarrow{display:none} }
+
   .feedbar{position:fixed; left:0; right:0; bottom:0; z-index:30; background:var(--card);
     border-top:1px solid var(--rule);
     padding:10px 0 calc(10px + env(safe-area-inset-bottom,0px))}
@@ -279,7 +297,7 @@
   .feedbar .wrap{display:flex; flex-direction:column; gap:2px;
     width:min(100%, 1760px); max-width:none; padding-inline:16px}
   .feedbar .ctl{display:flex; align-items:center; gap:12px}
-  @media (min-width:1181px){ .feedbar .wrap{padding-inline:28px;} }
+  @media (min-width:901px){ .feedbar .wrap{padding-inline:66px;} }
   .feedbar .cnt{font-family:"IBM Plex Mono",monospace; font-size:13px;
     font-variant-numeric:tabular-nums; white-space:nowrap}
   .feedbar button.pg{padding:6px 11px; font-size:13px}

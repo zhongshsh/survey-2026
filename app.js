@@ -554,10 +554,12 @@ function showPage(p, opts) {
 function pageNavSync() {
   const lab = document.getElementById('pgLabel');
   if (lab) lab.textContent = `${S.page + 1} / ${S.order.length}`;
-  const prev = document.getElementById('pgPrev');
-  const next = document.getElementById('pgNext');
-  if (prev) prev.disabled = S.page === 0;
-  if (next) next.disabled = S.page >= pageCount() - 1;
+  const first = S.page === 0, last = S.page >= pageCount() - 1;
+  [['pgPrev', first], ['pgNext', last],
+   ['navArrowL', first], ['navArrowR', last]].forEach(([id, off]) => {
+    const b = document.getElementById(id);
+    if (b) b.disabled = off;
+  });
   railHere(S.order[S.page]);
 }
 
@@ -603,6 +605,7 @@ function showGuide(next) {
   $('main').classList.remove('wide', 'feedmode');
   const fb = document.getElementById('feedBar');
   if (fb) fb.hidden = true;
+  document.querySelectorAll('.navarrow').forEach(a => { a.hidden = true; });
 
   const wrap = el('div');
   wrap.appendChild(guideCard());
@@ -763,6 +766,20 @@ function renderFeed() {
   bar.hidden = false;
   bar.querySelector('#feedSubmit').textContent = T().submit;
   buildRail(cards);                      // 题号条住在底栏里，得等它建好
+
+  // 页面两侧的悬浮箭头：视线在卡片上时不用往下找底栏
+  ['l', 'r'].forEach(side => {
+    const id = 'navArrow' + side.toUpperCase();
+    let a = document.getElementById(id);
+    if (!a) {
+      a = el('button', 'navarrow ' + side, side === 'l' ? '‹' : '›');
+      a.id = id;
+      a.type = 'button';
+      a.addEventListener('click', () => showPage(S.page + (side === 'l' ? -1 : 1)));
+      document.body.appendChild(a);
+    }
+    a.hidden = false;
+  });
 
   feedProgress();
   // 续答时直接落到第一道没答完的题所在的页
@@ -942,6 +959,7 @@ function formSize() {
 function showJoin(msg) {
   $('nav').hidden = true;
   $('main').classList.remove('wide', 'feedmode');
+  document.querySelectorAll('.navarrow').forEach(a => { a.hidden = true; });
   const fb = document.getElementById('feedBar');
   if (fb) fb.hidden = true;
   const cfg = SURVEYS[S.survey] || SURVEYS.judge;
@@ -1156,6 +1174,7 @@ function recallPid(survey) {
 function showFatal(msg) {
   $('nav').hidden = true;
   $('main').classList.remove('wide', 'feedmode');
+  document.querySelectorAll('.navarrow').forEach(a => { a.hidden = true; });
   const fb = document.getElementById('feedBar');
   if (fb) fb.hidden = true;
   const t = T();
@@ -1166,6 +1185,7 @@ function showFatal(msg) {
 function showThanks() {
   $('nav').hidden = true;
   $('main').classList.remove('wide', 'feedmode');
+  document.querySelectorAll('.navarrow').forEach(a => { a.hidden = true; });
   const fb = document.getElementById('feedBar');
   if (fb) fb.hidden = true;
   const t = T();
