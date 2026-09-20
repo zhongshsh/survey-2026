@@ -77,7 +77,7 @@ const STR = {
     len: (n, mins) => `共 ${n} 题，约 ${mins} 分钟，可分多次完成，答案自动保存。`,
     nameLabel: '你的名字', namePh: '留空 = 匿名',
     nameHint: '填了名字，换设备时打同样的名字就能接着上次继续。',
-    start: '开始', resumeQ: '已经答过一半？',
+    start: '开始', starting: '正在载入…', resumeQ: '已经答过一半？',
     resumeA: '同一浏览器直接打开原链接就会接着上次的地方继续。换了设备或清过浏览器数据：' +
              '填了名字的，打同样的名字即可；匿名的，用左上角参与者编号找回记录。',
     prev: '← 上一题', next: '下一题 →', submit: '提交问卷',
@@ -101,7 +101,7 @@ const STR = {
          `several sittings; answers save automatically.`,
     nameLabel: 'Your name', namePh: 'leave blank to stay anonymous',
     nameHint: 'If you give a name, entering the same name on another device resumes where you left off.',
-    start: 'Start', resumeQ: 'Already partway through?',
+    start: 'Start', starting: 'Starting…', resumeQ: 'Already partway through?',
     resumeA: 'Reopening the original link in the same browser resumes automatically. ' +
              'On another device, or after clearing browser data: if you gave a name, enter the ' +
              'same name; if you were anonymous, use the participant ID shown at the top left.',
@@ -758,6 +758,8 @@ function showJoin(msg) {
   $('nameIn').addEventListener('keydown', e => { if (e.key === 'Enter') $('joinGo').click(); });
   $('joinGo').addEventListener('click', async () => {
     $('joinGo').disabled = true;
+    const btnLabel = $('joinGo').textContent;
+    $('joinGo').textContent = T().starting;
     const name = $('nameIn').value.trim();
     let profile = {};
     if (cfg.profile) {
@@ -791,12 +793,21 @@ function showJoin(msg) {
                                 forms: S.meta.forms || null,
                                 item_ids: S.items.map(i => i.id) });
       rememberPid(S.survey, r.code);
-      // 带 ?p= 重载：新建和「按名字接续」走同一条恢复路径，答案回填不用写第二套
+      // 直接开答，不重载。重载要再拉一次 items.json(quality 那份 632KB)
+      // 外加一次 Apps Script 往返取状态，冷启动时这两步能吃掉十几秒。
+      S.code = r.code;
+      S.order = (r.item_ids && r.item_ids.length) ? r.item_ids
+                                                  : S.items.map(i => i.id);
+      S.answers = r.answers || {};
       const u = new URL(location.href);
       u.searchParams.set('p', r.code);
-      location.href = u.toString();
+      history.replaceState(null, '', u);     // 刷新/收藏仍能回到自己的进度
+      showPid();
+      S.idx = 0;
+      renderSurvey();
     } catch (e) {
       $('joinGo').disabled = false;
+      $('joinGo').textContent = btnLabel;
       showJoin(e.rejected ? (e.message || t.joinFail) : t.offline);
     }
   });
@@ -976,7 +987,9 @@ async function boot() {
 
   let bank;
   try {
-    bank = await (await fetch(cfg0.bank, { cache: 'no-cache' })).json();
+    // 不再 no-cache：题库是不可变内容（换题库会换 build_hash 和文件名），
+    // 让 GitHub Pages 的 ETag 生效，重复打开走 304 而不是重下 632KB。
+    bank = await (await fetch(cfg0.bank)).json();
   } catch (e) { showFatal(T().bankFail + e.message); return; }
   S.items = bank.items;
   S.meta = bank.meta || {};
