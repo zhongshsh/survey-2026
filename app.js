@@ -627,46 +627,26 @@ function guideSeen() {
   try { return localStorage.getItem('guide:' + S.code) === '1'; } catch (e) { return false; }
 }
 
-/* 题号条。不再铺满 32 个 —— 那样占掉半行且大部分是噪声。
-   只显示当前题附近的一段，加上首尾两个锚点，中间用省略号。
-   每次翻页或作答都重建：九个按钮而已，比维护增量状态省心。 */
-const RAIL_SPAN = 2;          // 当前题左右各留几个
-
-function railWindow() {
-  const n = S.order.length, cur = S.page;
-  const keep = new Set([0, n - 1]);
-  for (let i = cur - RAIL_SPAN; i <= cur + RAIL_SPAN; i++) {
-    if (i >= 0 && i < n) keep.add(i);
-  }
-  const idx = [...keep].sort((a, b) => a - b);
-  const out = [];
-  idx.forEach((i, k) => {
-    if (k && i - idx[k - 1] > 1) out.push(null);   // null = 省略号
-    out.push(i);
-  });
-  return out;
-}
-
+/* 题号条：全部题号都列出来，并在控制行中间。放不下时横向滚动，
+   当前题自动滚到可见处。每次翻页或作答整段重建 —— 三十几个按钮的开销
+   可以忽略，换来「变绿 / 高亮 / 滚动到位」三件事只有一处逻辑。 */
 function railRender() {
   const host = document.getElementById('railHost');
   if (!host) return;
   const rail = el('div', 'feedrail');
-  railWindow().forEach(i => {
-    if (i === null) {
-      rail.appendChild(el('span', 'gap', '…'));
-      return;
-    }
-    const id = S.order[i];
+  let cur = null;
+  S.order.forEach((id, i) => {
     const b = el('button', null, String(i + 1).padStart(2, '0'));
     b.type = 'button';
     b.dataset.item = id;
     b.title = `#${i + 1}`;
     if (answered(id)) b.classList.add('done');
-    if (i === S.page) b.classList.add('here');
+    if (i === S.page) { b.classList.add('here'); cur = b; }
     b.addEventListener('click', () => showPage(i));
     rail.appendChild(b);
   });
   host.replaceChildren(rail);
+  if (cur) cur.scrollIntoView({ block: 'nearest', inline: 'center' });
 }
 
 function feedProgress() {
@@ -752,9 +732,7 @@ function renderFeed() {
         <button class="pg" id="pgPrev" type="button">←</button>
         <span class="cnt" id="pgLabel"></span>
         <button class="pg" id="pgNext" type="button">→</button>
-        <span class="grow"></span>
         <div id="railHost"></div>
-        <span class="grow"></span>
         <span class="cnt" id="feedCnt"></span>
         <span class="sv" id="feedSave"></span>
         <button class="pg" id="pgGuide" type="button" title="Guidelines">?</button>
