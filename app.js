@@ -33,6 +33,7 @@ const S = {
   code: null, items: [], order: [], meta: {},
   answers: {}, idx: 0, finished: false,
   survey: 'judge', surveyTitle: '',
+  page: 0, pageSize: 1,
   // 交完之后点「重新填一份」时置真：下一次 join 不按名字接续，一定新建
   fresh: false,
 };
@@ -157,6 +158,9 @@ function setSave(state, text) {
   const n = $('saveState');
   n.dataset.s = state;
   n.textContent = text || T()[state] || state;
+  // feed 的底栏也显示一份：那里才是视线所在，顶栏容易被忽略
+  const f = document.getElementById('feedSave');
+  if (f) { f.dataset.s = state; f.textContent = n.textContent; }
 }
 
 /**
@@ -521,6 +525,56 @@ function feedCard(it, i) {
   return post;
 }
 
+/* 分页。默认一次一题 —— 32 张长卡连着刷，很容易漏掉中间某张没答完。
+   卡片全部渲染、只切换显隐：这样答案、题号隔离、已答状态都不用重建。 */
+const PAGE_SIZES = [1, 2, 5, 10, 0];       // 0 = 全部
+
+function pageSizeGet() {
+  try {
+    const v = parseInt(localStorage.getItem('pagesize:' + S.survey), 10);
+    if (PAGE_SIZES.includes(v)) return v;
+  } catch (e) { /* 存不下就用默认 */ }
+  return 1;
+}
+function pageSizeSet(v) {
+  S.pageSize = v;
+  try { localStorage.setItem('pagesize:' + S.survey, String(v)); } catch (e) { /* 同上 */ }
+}
+const pageCount = () =>
+  S.pageSize ? Math.max(1, Math.ceil(S.order.length / S.pageSize)) : 1;
+const pageOf = (idx) => (S.pageSize ? Math.floor(idx / S.pageSize) : 0);
+
+/** 只显示当前页的卡片。翻页前把待写队列冲掉，别让答案压在本地。 */
+function showPage(p, opts) {
+  const n = pageCount();
+  S.page = Math.max(0, Math.min(p, n - 1));
+  const lo = S.pageSize ? S.page * S.pageSize : 0;
+  const hi = S.pageSize ? lo + S.pageSize : S.order.length;
+  S.order.forEach((id, i) => {
+    const c = document.querySelector(`.post[data-item="${CSS.escape(id)}"]`);
+    if (c) c.hidden = !(i >= lo && i < hi);
+  });
+  const g = document.querySelector('.guide');
+  if (g) g.hidden = S.page !== 0;          // 说明只在第一页占地方
+  pageNavSync();
+  if (!(opts && opts.keepScroll)) window.scrollTo({ top: 0, behavior: 'smooth' });
+  Outbox.flush();
+}
+
+function pageNavSync() {
+  const n = pageCount();
+  const lab = document.getElementById('pgLabel');
+  if (lab) {
+    lab.textContent = S.pageSize === 1
+      ? `${S.page + 1} / ${S.order.length}`
+      : `page ${S.page + 1} / ${n}`;
+  }
+  const prev = document.getElementById('pgPrev');
+  const next = document.getElementById('pgNext');
+  if (prev) prev.disabled = S.page === 0;
+  if (next) next.disabled = S.page >= n - 1;
+}
+
 /* 开头的评审说明。放在所有卡片之前，讲清三件事：评什么、三个板块各自的依据、
    以及「结构化摘要只是辅助」。不写的话，每个人对 Feasibility 这类没有 rubric
    的项会各按各的理解打分，组间差就混进了口径差。 */
@@ -568,6 +622,7 @@ function buildRail(cards) {
     b.dataset.item = id;
     b.title = `#${i + 1}`;
     b.addEventListener('click', () => {
+      showPage(pageOf(i), { keepScroll: true });     // 先翻到那一页，再滚过去
       cards.get(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     });
     rail.appendChild(b);
@@ -612,6 +667,7 @@ function renderSurvey() {
 }
 
 function renderFeed() {
+  S.pageSize = pageSizeGet();
   const main = $('main');
   main.classList.remove('wide');
   main.classList.add('feedmode');      // 交出宽度控制权，由 .feed 自己居中
@@ -644,10 +700,17 @@ function renderFeed() {
                      client_ts: new Date().toISOString(),
                      elapsed_ms: Date.now() - (seenAt.get(id) || Date.now()) });
       feedProgress();
-      // 刚答完就滑到下一条，省掉「下一题在哪」这一步
+      // 刚答完就前进。一次一题时翻页，一页多题时滚到下一张。
       if (ok && !was) {
-        const nx = card.nextElementSibling;
-        if (nx) setTimeout(() => nx.scrollIntoView({ behavior: 'smooth', block: 'start' }), 280);
+        setTimeout(() => {
+          if (S.pageSize === 1) {
+            if (S.page < pageCount() - 1) showPage(S.page + 1);
+          } else {
+            let nx = card.nextElementSibling;
+            while (nx && nx.hidden) nx = nx.nextElementSibling;
+            if (nx) nx.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
+        }, 320);
       }
     };
     card.addEventListener('change', capture);
@@ -676,18 +739,34 @@ function renderFeed() {
     bar = el('div', 'feedbar');
     bar.id = 'feedBar';
     bar.innerHTML = `<div class="wrap">
-      <span class="cnt" id="feedCnt"></span>
+      <button class="pg" id="pgPrev" type="button">←</button>
+      <span class="cnt" id="pgLabel"></span>
+      <button class="pg" id="pgNext" type="button">→</button>
       <span class="rest"><i id="feedFill"></i></span>
+      <span class="cnt" id="feedCnt"></span>
+      <span class="sv" id="feedSave"></span>
+      <span class="sel"><label for="pgSize">per page</label>
+        <select id="pgSize">${PAGE_SIZES.map(v =>
+          `<option value="${v}">${v || 'all'}</option>`).join('')}</select></span>
       <button class="primary" id="feedSubmit" disabled></button></div>`;
     document.body.appendChild(bar);
     bar.querySelector('#feedSubmit').addEventListener('click', () => $('btnFinish').click());
+    bar.querySelector('#pgPrev').addEventListener('click', () => showPage(S.page - 1));
+    bar.querySelector('#pgNext').addEventListener('click', () => showPage(S.page + 1));
+    bar.querySelector('#pgSize').addEventListener('change', (e) => {
+      const first = S.pageSize ? S.page * S.pageSize : 0;   // 停在原来那一题上
+      pageSizeSet(parseInt(e.target.value, 10));
+      showPage(pageOf(first));
+    });
   }
   bar.hidden = false;
   bar.querySelector('#feedSubmit').textContent = T().submit;
+  bar.querySelector('#pgSize').value = String(S.pageSize);
 
   feedProgress();
+  // 续答时直接落到第一道没答完的题所在的页
   const first = S.order.findIndex(id => !answered(id));
-  if (first > 0) cards.get(S.order[first])?.scrollIntoView({ block: 'start' });
+  showPage(pageOf(first < 0 ? 0 : first));
 }
 
 /* ------------------------------------------------------------------ 界面 */
@@ -1198,6 +1277,7 @@ $('btnFinish').addEventListener('click', async () => {
     alert(T().unfinished(incomplete.length));
     const first = incomplete[0];
     if (isFeed()) {
+      showPage(pageOf(S.order.indexOf(first)), { keepScroll: true });
       const card = document.querySelector(`.post[data-item="${CSS.escape(first)}"]`);
       if (card) {
         card.scrollIntoView({ behavior: 'smooth', block: 'start' });
