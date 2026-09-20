@@ -314,9 +314,10 @@ function missingKeys(part, ans) {
   ans = ans || {};
   const need = part === 'A'
     ? [...ratedFields().map(f => 'f_' + f), 'same_idea', 'confidence']
+    // 熟悉度不在这里问：登记页已经按同样的四个领域问过一次，
+    // 每题再问一遍是 32 次重复，而答案对同一个人基本不变。
     : ['soundness', 'presentation', 'contribution',
-       'feasibility', 'success', 'rating', 'confidence',
-       'guess_source', 'expertise'];
+       'feasibility', 'success', 'rating', 'confidence', 'guess_source'];
   const miss = need.filter(k => {
     const v = ans[k];
     return v === undefined || v === null || String(v).trim() === '';
@@ -445,10 +446,6 @@ function renderB(it) {
         <small>Blinding check.</small></div>
         ${scale('guess_source', [{ v: 'paper', t: 'real paper' }, { v: 'agent', t: 'AI-generated' },
                                  { v: 'unsure', t: "can't tell" }])}</div>
-      <div class="row"><div class="q">How familiar are you with
-        <b>${esc(areaName(it.theme))}</b>?</div>
-        ${scale('expertise', [{ v: 1, t: 'not at all' }, { v: 2, t: 'read in it' },
-                              { v: 3, t: 'worked in it' }, { v: 4, t: 'published in it' }])}</div>
     </div>`;
   return { left, right };
 }
