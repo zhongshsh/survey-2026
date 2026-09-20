@@ -56,6 +56,7 @@ const SURVEYS = {
     part: 'B',
     mode: 'feed',          // 连续信息流；judge 仍走一题一屏的分页
     profile: true,         // 登记时问背景。judge 已发布、不再改，故只对本卷开
+    showLength: false,     // 不在入口页报题数与时长
 
 
     minPerItem: 2,         // 读标题+摘要，八项点选，无文本框
@@ -739,7 +740,7 @@ function showJoin(msg) {
   p.innerHTML = `
     <h2>${esc(cfg.title)}</h2>
     <p>${cfg.blurb}</p>
-    <p>${t.privacy} ${t.len(formSize(),
+    <p>${t.privacy}${cfg.showLength === false ? '' : ' ' + t.len(formSize(),
         Math.max(1, Math.round(formSize() * (cfg.minPerItem || 1.8))))}</p>
     ${msg ? `<div class="note">${esc(msg)}</div>` : ''}
     <div class="row" style="margin-top:18px"><div class="q">${t.nameLabel}</div></div>
