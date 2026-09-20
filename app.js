@@ -533,6 +533,7 @@ function renderSurvey() {
 function renderFeed() {
   const main = $('main');
   main.classList.remove('wide');
+  main.classList.add('feedmode');      // 交出宽度控制权，由 .feed 自己居中
   $('nav').hidden = true;
 
   const feed = el('div', 'feed');
@@ -680,7 +681,8 @@ function renderItem() {
      </div>`;
 
   const main = $('main');
-  main.classList.add('wide');        // 答题屏用宽版容器
+  main.classList.remove('feedmode');
+  main.classList.add('wide');        // 分页答题屏用宽版容器
   main.replaceChildren(card);
   window.scrollTo(0, 0);
 
@@ -772,7 +774,7 @@ function formSize() {
 
 function showJoin(msg) {
   $('nav').hidden = true;
-  $('main').classList.remove('wide');
+  $('main').classList.remove('wide', 'feedmode');
   const fb = document.getElementById('feedBar');
   if (fb) fb.hidden = true;
   const cfg = SURVEYS[S.survey] || SURVEYS.judge;
@@ -985,7 +987,7 @@ function recallPid(survey) {
 
 function showFatal(msg) {
   $('nav').hidden = true;
-  $('main').classList.remove('wide');
+  $('main').classList.remove('wide', 'feedmode');
   const fb = document.getElementById('feedBar');
   if (fb) fb.hidden = true;
   const t = T();
@@ -995,7 +997,7 @@ function showFatal(msg) {
 
 function showThanks() {
   $('nav').hidden = true;
-  $('main').classList.remove('wide');
+  $('main').classList.remove('wide', 'feedmode');
   const fb = document.getElementById('feedBar');
   if (fb) fb.hidden = true;
   const t = T();
